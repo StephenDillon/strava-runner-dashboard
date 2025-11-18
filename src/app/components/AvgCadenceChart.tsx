@@ -1,10 +1,11 @@
 "use client";
 
 import React from 'react';
-import { getWeeksBack, formatWeekLabel } from '../utils/dateUtils';
+import { getWeeksBack, formatWeekLabel, formatWeekTooltip } from '../utils/dateUtils';
 
 interface CadenceData {
   week: string;
+  weekTooltip: string;
   cadence: number; // steps per minute
 }
 
@@ -19,6 +20,7 @@ export default function AvgCadenceChart({ endDate }: AvgCadenceChartProps) {
   const weeks = getWeeksBack(8, endDate);
   const sampleData: CadenceData[] = weeks.map((date, index) => ({
     week: formatWeekLabel(date),
+    weekTooltip: formatWeekTooltip(date),
     cadence: sampleCadences[index]
   }));
   const minCadence = Math.min(...sampleData.map(d => d.cadence));
@@ -46,7 +48,7 @@ export default function AvgCadenceChart({ endDate }: AvgCadenceChartProps) {
                   >
                   </div>
                 </div>
-                <div className="text-xs font-medium text-gray-600 dark:text-gray-300 mt-2">
+                <div className="text-xs font-medium text-gray-600 dark:text-gray-300 mt-2 cursor-help" title={data.weekTooltip}>
                   {data.week}
                 </div>
               </div>

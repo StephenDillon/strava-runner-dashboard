@@ -1,10 +1,11 @@
 "use client";
 
 import React from 'react';
-import { getWeeksBack, formatWeekLabel } from '../utils/dateUtils';
+import { getWeeksBack, formatWeekLabel, formatWeekTooltip } from '../utils/dateUtils';
 
 interface WeekData {
   week: string;
+  weekTooltip: string;
   miles: number;
 }
 
@@ -19,6 +20,7 @@ export default function WeeklyMileageChart({ endDate }: WeeklyMileageChartProps)
   const weeks = getWeeksBack(8, endDate);
   const sampleData: WeekData[] = weeks.map((date, index) => ({
     week: formatWeekLabel(date),
+    weekTooltip: formatWeekTooltip(date),
     miles: sampleMiles[index]
   }));
   
@@ -30,7 +32,7 @@ export default function WeeklyMileageChart({ endDate }: WeeklyMileageChartProps)
       <div className="space-y-3">
         {sampleData.map((data, index) => (
           <div key={index} className="flex items-center gap-3">
-            <div className="w-20 text-sm font-medium text-gray-600 dark:text-gray-300">
+            <div className="w-20 text-sm font-medium text-gray-600 dark:text-gray-300 cursor-help" title={data.weekTooltip}>
               {data.week}
             </div>
             <div className="flex-1 bg-gray-200 dark:bg-gray-700 rounded-full h-8 relative overflow-hidden">
