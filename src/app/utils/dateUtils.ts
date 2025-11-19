@@ -22,10 +22,10 @@ export function getLastFullWeek(weekStartsOn: WeekStartDay = 'Sunday'): Date {
     daysToLastStart = 7 - (startDayNum - dayOfWeek);
   }
   
-  const lastStart = new Date(today);
-  lastStart.setDate(today.getDate() - daysToLastStart - 7); // Previous complete week
-  lastStart.setHours(0, 0, 0, 0);
-  return lastStart;
+  const currentWeekStart = new Date(today);
+  currentWeekStart.setDate(today.getDate() - daysToLastStart);
+  currentWeekStart.setHours(0, 0, 0, 0);
+  return currentWeekStart;
 }
 
 export function getWeekStartDate(weeksBack: number, endDate: Date): Date {
