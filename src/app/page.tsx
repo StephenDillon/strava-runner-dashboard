@@ -5,7 +5,6 @@ import { useSearchParams } from "next/navigation";
 import WeekSelector from "./components/WeekSelector";
 import WeeklyMileageChart from "./components/WeeklyMileageChart";
 import AvgCadenceChart from "./components/AvgCadenceChart";
-import AvgHeartRateChart from "./components/AvgHeartRateChart";
 import ConnectStrava from "./components/ConnectStrava";
 import { getLastFullWeek } from "./utils/dateUtils";
 import { useUnit } from "./context/UnitContext";
@@ -66,10 +65,6 @@ export default function Home() {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
           <WeeklyMileageChart endDate={selectedWeek} unit={unit} />
           <AvgCadenceChart endDate={selectedWeek} />
-        </div>
-        
-        <div className="grid grid-cols-1 gap-8">
-          <AvgHeartRateChart endDate={selectedWeek} />
         </div>
       </div>
     </div>
