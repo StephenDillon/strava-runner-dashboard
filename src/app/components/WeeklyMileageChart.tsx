@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useMemo, useState } from 'react';
+import React, { useMemo, useState, useEffect, useRef } from 'react';
 import { getWeeksBack, formatWeekLabel, formatWeekTooltip } from '../utils/dateUtils';
 import { useStravaActivities } from '../hooks/useStravaActivities';
 import { aggregateActivitiesByWeek, generateWeekStarts, milesToKilometers, metersToMiles } from '../utils/activityAggregation';
@@ -28,11 +28,14 @@ export default function WeeklyMileageChart({ endDate, unit }: WeeklyMileageChart
   const [openWeek, setOpenWeek] = useState<number | null>(null);
   const [hoveredWeek, setHoveredWeek] = useState<number | null>(null);
   const [lockedWeek, setLockedWeek] = useState<number | null>(null);
+  const tooltipRefs = useRef<(HTMLDivElement | null)[]>([]);
+  const barRefs = useRef<(HTMLDivElement | null)[]>([]);
 
   const toggleWeek = (index: number) => {
     if (lockedWeek === index) {
       setLockedWeek(null);
     } else {
+      // Close any open tooltip before opening the new one
       setLockedWeek(index);
     }
   };
@@ -127,6 +130,7 @@ export default function WeeklyMileageChart({ endDate, unit }: WeeklyMileageChart
                 {data.week}
               </div>
               <div 
+                ref={(el) => { barRefs.current[index] = el; }}
                 className="flex-1 bg-gray-200 dark:bg-gray-700 rounded-full h-8 relative overflow-visible"
                 onClick={() => toggleWeek(index)}
                 onMouseEnter={() => handleMouseEnter(index)}
@@ -142,12 +146,27 @@ export default function WeeklyMileageChart({ endDate, unit }: WeeklyMileageChart
                 </div>
                 
                 {isOpen(index) && weekActivities.length > 0 && (
-                  <div className="absolute left-0 top-10 z-50 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg shadow-xl p-3 min-w-[300px] max-w-[400px]">
+                  <div 
+                    ref={(el) => { tooltipRefs.current[index] = el; }}
+                    className="absolute left-0 top-10 z-50 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg shadow-xl p-3 min-w-[300px] max-w-[400px]"
+                  >
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setLockedWeek(null);
+                      }}
+                      className="absolute top-2 right-2 text-gray-400 hover:text-gray-600 dark:text-gray-500 dark:hover:text-gray-300 transition-colors"
+                      title="Close"
+                    >
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                      </svg>
+                    </button>
                     <div className="text-xs font-semibold text-gray-700 dark:text-gray-200 mb-1">
                       {weekActivities.length} {weekActivities.length === 1 ? 'Activity' : 'Activities'} this week:
                     </div>
                     <div className="text-[10px] text-gray-500 dark:text-gray-400 mb-2 italic">
-                      Click to keep open, click again to close
+                      Click to keep open, click X to close
                     </div>
                     <div className="space-y-1 max-h-60 overflow-y-auto">
                       {weekActivities.map((activity) => {
