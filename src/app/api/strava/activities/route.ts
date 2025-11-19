@@ -27,8 +27,9 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ activities: runActivities });
   } catch (error) {
     console.error('Error fetching activities:', error);
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
     return NextResponse.json(
-      { error: 'Failed to fetch activities' },
+      { error: 'Failed to fetch activities', details: errorMessage },
       { status: 500 }
     );
   }

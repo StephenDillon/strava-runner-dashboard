@@ -1,7 +1,6 @@
 "use client";
 
-import { useState, useEffect, Suspense } from "react";
-import { useSearchParams } from "next/navigation";
+import { useState, useEffect } from "react";
 import WeekSelector from "./components/WeekSelector";
 import WeeklyMileageChart from "./components/WeeklyMileageChart";
 import AvgCadenceChart from "./components/AvgCadenceChart";
@@ -11,29 +10,27 @@ import { useUnit } from "./context/UnitContext";
 import { useStravaAuth } from "./context/StravaAuthContext";
 import { useWeekStart } from "./context/WeekStartContext";
 
-function AuthHandler() {
-  const searchParams = useSearchParams();
-  const { setIsAuthenticated } = useStravaAuth();
+export default function Home() {
+  const { weekStartDay } = useWeekStart();
+  const [selectedWeek, setSelectedWeek] = useState<Date>(getLastFullWeek(weekStartDay));
+  const { unit } = useUnit();
+  const { isAuthenticated, setIsAuthenticated } = useStravaAuth();
+  const [isCheckingAuth, setIsCheckingAuth] = useState(true);
 
+  // Check for auth success in URL on mount
   useEffect(() => {
-    // Check if user just completed OAuth
-    const authSuccess = searchParams.get('auth');
+    const params = new URLSearchParams(window.location.search);
+    const authSuccess = params.get('auth');
+    
     if (authSuccess === 'success') {
       localStorage.setItem('strava_authenticated', 'true');
       setIsAuthenticated(true);
       // Clean up URL
       window.history.replaceState({}, '', '/');
     }
-  }, [searchParams, setIsAuthenticated]);
-
-  return null;
-}
-
-export default function Home() {
-  const { weekStartDay } = useWeekStart();
-  const [selectedWeek, setSelectedWeek] = useState<Date>(getLastFullWeek(weekStartDay));
-  const { unit } = useUnit();
-  const { isAuthenticated } = useStravaAuth();
+    
+    setIsCheckingAuth(false);
+  }, [setIsAuthenticated]);
 
   // Update selected week when week start day changes
   useEffect(() => {
@@ -52,6 +49,15 @@ export default function Home() {
     }
   };
 
+  // Show loading while checking auth
+  if (isCheckingAuth) {
+    return (
+      <div className="min-h-screen font-sans bg-linear-to-br from-blue-50 to-indigo-100 dark:from-gray-900 dark:to-gray-800 flex items-center justify-center">
+        <div className="text-gray-500 dark:text-gray-400">Loading...</div>
+      </div>
+    );
+  }
+
   if (!isAuthenticated) {
     return (
       <div className="min-h-screen font-sans bg-linear-to-br from-blue-50 to-indigo-100 dark:from-gray-900 dark:to-gray-800">
@@ -64,9 +70,6 @@ export default function Home() {
   
   return (
     <div className="min-h-screen font-sans bg-linear-to-br from-blue-50 to-indigo-100 dark:from-gray-900 dark:to-gray-800">
-      <Suspense fallback={null}>
-        <AuthHandler />
-      </Suspense>
       <div className="max-w-7xl mx-auto py-12 px-4">
         <WeekSelector selectedWeek={selectedWeek} onWeekChange={setSelectedWeek} />
         
