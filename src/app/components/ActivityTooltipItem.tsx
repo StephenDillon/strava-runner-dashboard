@@ -9,6 +9,7 @@ interface ActivityTooltipItemProps {
   onToggle: (activityId: number) => void;
   distance: string;
   unitLabel: string;
+  showCadence?: boolean;
 }
 
 export default function ActivityTooltipItem({ 
@@ -16,7 +17,8 @@ export default function ActivityTooltipItem({
   isDisabled, 
   onToggle, 
   distance, 
-  unitLabel 
+  unitLabel,
+  showCadence = false
 }: ActivityTooltipItemProps) {
   return (
     <div
@@ -66,6 +68,11 @@ export default function ActivityTooltipItem({
         <div className="text-gray-600 dark:text-gray-400">
           {distance} {unitLabel} • {new Date(activity.start_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
         </div>
+        {showCadence && activity.average_cadence && (
+          <div className="text-gray-600 dark:text-gray-400">
+            Cadence: {Math.round(activity.average_cadence * 2)} spm
+          </div>
+        )}
       </div>
     </div>
   );

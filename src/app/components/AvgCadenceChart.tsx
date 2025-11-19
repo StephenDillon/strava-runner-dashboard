@@ -7,6 +7,7 @@ import { aggregateActivitiesByWeek, generateWeekStarts, metersToMiles } from '..
 import { useWeekStart } from '../context/WeekStartContext';
 import { useDisabledActivities } from '../context/DisabledActivitiesContext';
 import ActivityTooltipItem from './ActivityTooltipItem';
+import WeekActivitiesTooltip from './WeekActivitiesTooltip';
 
 interface CadenceData {
   week: string;
@@ -150,40 +151,15 @@ export default function AvgCadenceChart({ endDate }: AvgCadenceChartProps) {
                 </div>
                 
                 {isOpen(index) && weekActivities.length > 0 && (
-                  <div 
-                    ref={(el) => { tooltipRefs.current[index] = el; }}
-                    className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 z-50 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg shadow-xl p-3 min-w-[280px] max-w-[350px]"
-                  >
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        setLockedWeek(null);
-                      }}
-                      className="absolute top-2 right-2 text-gray-400 hover:text-gray-600 dark:text-gray-500 dark:hover:text-gray-300 transition-colors"
-                      title="Close"
-                    >
-                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                      </svg>
-                    </button>
-                    <div className="text-xs font-semibold text-gray-700 dark:text-gray-200 mb-1">
-                      {weekActivities.length} {weekActivities.length === 1 ? 'Activity' : 'Activities'} with cadence:
-                    </div>
-                    <div className="text-[10px] text-gray-500 dark:text-gray-400 mb-2 italic">
-                      Click to keep open, click X to close
-                    </div>
-                    <div className="space-y-1 max-h-60 overflow-y-auto">
-                      {weekActivities.map((activity) => (
-                        <ActivityTooltipItem
-                          key={activity.id}
-                          activity={activity}
-                          isDisabled={isActivityDisabled(activity.id)}
-                          onToggle={toggleActivity}
-                          distance={metersToMiles(activity.distance).toFixed(2)}
-                          unitLabel="mi"
-                        />
-                      ))}
-                    </div>
+                  <div ref={(el) => { tooltipRefs.current[index] = el; }}>
+                    <WeekActivitiesTooltip
+                      activities={weekActivities}
+                      onClose={() => setLockedWeek(null)}
+                      isActivityDisabled={isActivityDisabled}
+                      onToggleActivity={toggleActivity}
+                      unit="miles"
+                      showCadence={true}
+                    />
                   </div>
                 )}
                 
