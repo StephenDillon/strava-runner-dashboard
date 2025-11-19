@@ -14,7 +14,7 @@ export default function Footer() {
               For informational purposes only.
             </p>
             <p className="text-gray-600 dark:text-gray-400 text-sm">
-              © {currentYear} Stephen Running Dashboard. All rights reserved.
+              © {currentYear} Running Dashboard. All rights reserved.
             </p>
           </div>
         </div>

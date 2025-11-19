@@ -16,7 +16,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Stephens Running Dashboard",
+  title: "Running Dashboard",
   description: "A simple dashboard to track my running stats from Strava.",
 };
 
