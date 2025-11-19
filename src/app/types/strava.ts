@@ -1,0 +1,48 @@
+export interface StravaActivity {
+  id: number;
+  name: string;
+  distance: number; // meters
+  moving_time: number; // seconds
+  elapsed_time: number; // seconds
+  total_elevation_gain: number;
+  type: string;
+  start_date: string;
+  start_date_local: string;
+  average_speed: number; // meters per second
+  max_speed: number;
+  average_cadence?: number;
+  average_heartrate?: number;
+  max_heartrate?: number;
+  calories?: number;
+}
+
+export interface StravaTokenResponse {
+  token_type: string;
+  expires_at: number;
+  expires_in: number;
+  refresh_token: string;
+  access_token: string;
+  athlete: {
+    id: number;
+    username: string;
+    firstname: string;
+    lastname: string;
+  };
+}
+
+export interface StravaStats {
+  recent_run_totals: {
+    count: number;
+    distance: number;
+    moving_time: number;
+    elapsed_time: number;
+    elevation_gain: number;
+  };
+  all_run_totals: {
+    count: number;
+    distance: number;
+    moving_time: number;
+    elapsed_time: number;
+    elevation_gain: number;
+  };
+}
