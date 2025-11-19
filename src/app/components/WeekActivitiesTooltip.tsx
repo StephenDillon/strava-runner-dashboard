@@ -24,8 +24,13 @@ export default function WeekActivitiesTooltip({
 }: WeekActivitiesTooltipProps) {
   const unitLabel = unit === 'kilometers' ? 'km' : 'mi';
   
+  // Sort activities from oldest to newest
+  const sortedActivities = [...activities].sort((a, b) => 
+    new Date(a.start_date).getTime() - new Date(b.start_date).getTime()
+  );
+  
   // Calculate total distance
-  const totalDistance = activities.reduce((sum, activity) => {
+  const totalDistance = sortedActivities.reduce((sum, activity) => {
     if (isActivityDisabled(activity.id)) return sum;
     const distanceMiles = metersToMiles(activity.distance);
     return sum + (unit === 'kilometers' ? distanceMiles * 1.60934 : distanceMiles);
@@ -60,7 +65,7 @@ export default function WeekActivitiesTooltip({
       </div>
 
       <div className="space-y-1 max-h-60 overflow-y-auto">
-        {activities.map((activity) => {
+        {sortedActivities.map((activity) => {
           const distance = unit === 'kilometers' 
             ? (metersToMiles(activity.distance) * 1.60934).toFixed(2)
             : metersToMiles(activity.distance).toFixed(2);
