@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { StravaActivity } from '../types/strava';
+import { useStravaAuth } from '../context/StravaAuthContext';
 
 interface CachedActivities {
   activities: StravaActivity[];
@@ -16,6 +17,7 @@ export function useStravaActivities(startDate: Date, endDate: Date) {
   const [activities, setActivities] = useState<StravaActivity[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const { setIsAuthenticated } = useStravaAuth();
 
   useEffect(() => {
     let isMounted = true;
@@ -57,6 +59,12 @@ export function useStravaActivities(startDate: Date, endDate: Date) {
         );
 
         if (!response.ok) {
+          if (response.status === 401 || response.status === 403 || response.status === 500) {
+            // Authentication failed - clear auth state and prompt user to login again
+            localStorage.removeItem('strava_authenticated');
+            setIsAuthenticated(false);
+            throw new Error('Your Strava session has expired. Please connect with Strava again.');
+          }
           throw new Error('Failed to fetch activities from Strava');
         }
 

@@ -24,7 +24,12 @@ export async function GET(request: NextRequest) {
       (activity) => activity.type === 'Run' || activity.type === 'VirtualRun'
     );
 
-    return NextResponse.json({ activities: runActivities });
+    const response = NextResponse.json({ activities: runActivities });
+    
+    // Cache for 7 days (604800 seconds)
+    response.headers.set('Cache-Control', 'public, max-age=604800, s-maxage=604800');
+    
+    return response;
   } catch (error) {
     console.error('Error fetching activities:', error);
     const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
