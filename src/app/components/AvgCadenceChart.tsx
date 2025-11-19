@@ -200,22 +200,31 @@ export default function AvgCadenceChart({ endDate }: AvgCadenceChartProps) {
                                 </svg>
                               )}
                             </button>
-                            <a
-                              href={`https://www.strava.com/activities/${activity.id}`}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className={`flex-1 text-xs block ${
+                            <div className="flex-1 text-xs">
+                              <a
+                                href={`https://www.strava.com/activities/${activity.id}`}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className={`block ${
+                                  isDisabled
+                                    ? 'text-gray-500 dark:text-gray-400'
+                                    : 'text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 hover:underline'
+                                }`}
+                              >
+                                View on Strava
+                              </a>
+                              <div className={`${
                                 isDisabled
                                   ? 'text-gray-500 dark:text-gray-400 line-through'
-                                  : 'text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 hover:underline'
-                              }`}
-                            >
-                              <div className="font-medium">{activity.name}</div>
+                                  : 'text-gray-900 dark:text-gray-100'
+                              }`}>
+                                {activity.name}
+                              </div>
                               <div className="text-gray-600 dark:text-gray-400">
                                 {metersToMiles(activity.distance).toFixed(2)} mi
                                 {activity.average_cadence && ` • ${Math.round(activity.average_cadence * 2)} spm`}
                               </div>
-                            </a>
+                            </div>
                           </div>
                         );
                       })}

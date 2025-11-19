@@ -52,7 +52,7 @@ export default function Home() {
   // Show loading while checking auth
   if (isCheckingAuth) {
     return (
-      <div className="min-h-screen font-sans bg-linear-to-br from-blue-50 to-indigo-100 dark:from-gray-900 dark:to-gray-800 flex items-center justify-center">
+      <div className="font-sans bg-linear-to-br from-blue-50 to-indigo-100 dark:from-gray-900 dark:to-gray-800 flex items-center justify-center">
         <div className="text-gray-500 dark:text-gray-400">Loading...</div>
       </div>
     );
@@ -60,7 +60,7 @@ export default function Home() {
 
   if (!isAuthenticated) {
     return (
-      <div className="min-h-screen font-sans bg-linear-to-br from-blue-50 to-indigo-100 dark:from-gray-900 dark:to-gray-800">
+      <div className="font-sans bg-linear-to-br from-blue-50 to-indigo-100 dark:from-gray-900 dark:to-gray-800">
         <div className="max-w-7xl mx-auto py-12 px-4">
           <ConnectStrava onConnect={handleConnect} />
         </div>
@@ -69,7 +69,7 @@ export default function Home() {
   }
   
   return (
-    <div className="min-h-screen font-sans bg-linear-to-br from-blue-50 to-indigo-100 dark:from-gray-900 dark:to-gray-800">
+    <div className="font-sans bg-linear-to-br from-blue-50 to-indigo-100 dark:from-gray-900 dark:to-gray-800">
       <div className="max-w-7xl mx-auto py-12 px-4">
         <WeekSelector selectedWeek={selectedWeek} onWeekChange={setSelectedWeek} />
         

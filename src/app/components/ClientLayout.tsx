@@ -21,7 +21,7 @@ function ClientLayoutContent({ children }: { children: React.ReactNode }) {
   return (
     <ConfigContext.Provider value={{ showConfig, setShowConfig }}>
       <Header onConfigToggle={() => setShowConfig(!showConfig)} showConfig={showConfig} />
-      <main className="grow">
+      <main className="grow font-sans bg-linear-to-br from-blue-50 to-indigo-100 dark:from-gray-900 dark:to-gray-800">
         {children}
       </main>
     </ConfigContext.Provider>
