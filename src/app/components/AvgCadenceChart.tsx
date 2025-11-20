@@ -110,12 +110,12 @@ export default function AvgCadenceChart({ endDate }: AvgCadenceChartProps) {
   }
   
   return (
-    <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6 flex flex-col h-full">
-      <div className="flex items-center justify-between mb-4">
-        <h2 className="text-2xl font-bold text-gray-800 dark:text-white h-8">Average Cadence</h2>
-        <span className="text-xs text-gray-500 dark:text-gray-400 italic">Click bar to view activities</span>
+    <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-4 sm:p-6 flex flex-col h-full">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-3 sm:mb-4 gap-1 sm:gap-0">
+        <h2 className="text-xl sm:text-2xl font-bold text-gray-800 dark:text-white">Average Cadence</h2>
+        <span className="text-[10px] sm:text-xs text-gray-500 dark:text-gray-400 italic">Tap bar to view activities</span>
       </div>
-      <div className="relative bg-gray-50 dark:bg-gray-900 rounded-lg p-4 pt-8 flex-1" style={{ minHeight: '300px' }}>
+      <div className="relative bg-gray-50 dark:bg-gray-900 rounded-lg p-4 pt-8 flex-1" style={{ minHeight: '250px' }}>
         <div className="h-full flex items-end justify-around gap-2">
           {chartData.map((data, index) => {
             const heightPercent = data.cadence && range > 0
