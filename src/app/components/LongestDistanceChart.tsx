@@ -144,33 +144,33 @@ export default function LongestDistanceChart({ endDate, unit }: LongestDistanceC
   const maxLongest = Math.max(...convertedData.map(d => d.distance));
 
   return (
-    <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6 flex flex-col h-full">
-      <div className="flex items-center justify-between mb-4">
-        <h2 className="text-2xl font-bold text-gray-800 dark:text-white h-8">Longest Run</h2>
-        <span className="text-xs text-gray-500 dark:text-gray-400 italic">Click bar to view activities</span>
+    <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-4 sm:p-6 flex flex-col h-full">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-3 sm:mb-4 gap-1 sm:gap-0">
+        <h2 className="text-xl sm:text-2xl font-bold text-gray-800 dark:text-white">Longest Run</h2>
+        <span className="text-[10px] sm:text-xs text-gray-500 dark:text-gray-400 italic">Tap bar to view activities</span>
       </div>
-      <div className="space-y-3 flex-1" style={{ minHeight: '300px' }}>
+      <div className="space-y-2 sm:space-y-3 flex-1" style={{ minHeight: '250px' }}>
           {convertedData.map((data, index) => {
             const open = isOpen(index);
             const weekActivities = weeklyLongestRuns[index]?.allActivities || [];
             
             return (
-              <div key={index} className="flex items-center gap-3 relative">
-                <div className="w-20 text-sm font-medium text-gray-600 dark:text-gray-300 cursor-help" title={data.weekTooltip}>
+              <div key={index} className="flex items-center gap-2 sm:gap-3 relative">
+                <div className="w-12 sm:w-20 text-[10px] sm:text-sm font-medium text-gray-600 dark:text-gray-300 cursor-help" title={data.weekTooltip}>
                   {data.week}
                 </div>
                 <div 
                   ref={(el) => { barRefs.current[index] = el; }}
-                  className="flex-1 bg-gray-200 dark:bg-gray-700 rounded-full h-8 relative overflow-visible"
+                  className="flex-1 bg-gray-200 dark:bg-gray-700 rounded-full h-6 sm:h-8 relative overflow-visible"
                   onClick={() => toggleWeek(index)}
                   onMouseEnter={() => handleMouseEnter(index)}
                   onMouseLeave={handleMouseLeave}
                 >
                   <div
-                    className="bg-linear-to-r from-blue-500 to-indigo-600 h-full rounded-full flex items-center justify-end pr-3 transition-all duration-500 cursor-pointer hover:opacity-90"
+                    className="bg-linear-to-r from-blue-500 to-indigo-600 h-full rounded-full flex items-center justify-end pr-2 sm:pr-3 transition-all duration-500 cursor-pointer hover:opacity-90"
                     style={{ width: `${(data.distance / maxDistance) * 100}%` }}
                   >
-                    <span className="text-white text-sm font-semibold">
+                    <span className="text-white text-xs sm:text-sm font-semibold">
                       {data.distance.toFixed(1)} {unitLabel}
                     </span>
                   </div>
@@ -191,8 +191,8 @@ export default function LongestDistanceChart({ endDate, unit }: LongestDistanceC
           );
         })}
       </div>
-      <div className="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700 h-14">
-        <div className="flex justify-between text-sm text-gray-600 dark:text-gray-400">
+      <div className="mt-3 sm:mt-4 pt-3 sm:pt-4 border-t border-gray-200 dark:border-gray-700 min-h-12 sm:min-h-14">
+        <div className="flex flex-col sm:flex-row justify-between gap-1 sm:gap-0 text-xs sm:text-sm text-gray-600 dark:text-gray-400">
           <span>Longest: <strong className="text-gray-800 dark:text-white">{maxLongest.toFixed(1)} {unitLabel}</strong></span>
           <span>Avg Long Run: <strong className="text-gray-800 dark:text-white">{avgLongest.toFixed(1)} {unitLabel}</strong></span>
         </div>

@@ -71,15 +71,15 @@ export default function Home() {
   
   return (
     <div className="font-sans bg-linear-to-br from-blue-50 to-indigo-100 dark:from-gray-900 dark:to-gray-800">
-      <div className="max-w-7xl mx-auto py-12 px-4">
+      <div className="max-w-7xl mx-auto py-4 sm:py-8 md:py-12 px-3 sm:px-4">
         <WeekSelector selectedWeek={selectedWeek} onWeekChange={setSelectedWeek} />
         
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6 md:gap-8 mb-4 sm:mb-6 md:mb-8">
           <WeeklyMileageChart endDate={selectedWeek} unit={unit} />
           <LongestDistanceChart endDate={selectedWeek} unit={unit} />
         </div>
 
-        <div className="grid grid-cols-1 gap-8 mb-8">
+        <div className="grid grid-cols-1 gap-4 sm:gap-6 md:gap-8 mb-4 sm:mb-6 md:mb-8">
           <AvgCadenceChart endDate={selectedWeek} />
         </div>
       </div>

@@ -89,8 +89,8 @@ export default function AvgCadenceChart({ endDate }: AvgCadenceChartProps) {
   
   if (loading) {
     return (
-      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6 flex flex-col h-full">
-        <h2 className="text-2xl font-bold mb-4 text-gray-800 dark:text-white h-8">Average Cadence</h2>
+      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-4 sm:p-6 flex flex-col h-full">
+        <h2 className="text-xl sm:text-2xl font-bold mb-3 sm:mb-4 text-gray-800 dark:text-white">Average Cadence</h2>
         <div className="flex-1 flex items-center justify-center">
           <div className="text-gray-500 dark:text-gray-400">Loading activities...</div>
         </div>
@@ -100,8 +100,8 @@ export default function AvgCadenceChart({ endDate }: AvgCadenceChartProps) {
 
   if (error) {
     return (
-      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6 flex flex-col h-full">
-        <h2 className="text-2xl font-bold mb-4 text-gray-800 dark:text-white h-8">Average Cadence</h2>
+      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-4 sm:p-6 flex flex-col h-full">
+        <h2 className="text-xl sm:text-2xl font-bold mb-3 sm:mb-4 text-gray-800 dark:text-white">Average Cadence</h2>
         <div className="flex-1 flex items-center justify-center">
           <div className="text-red-500">Error loading activities: {error}</div>
         </div>
@@ -171,8 +171,8 @@ export default function AvgCadenceChart({ endDate }: AvgCadenceChartProps) {
           })}
         </div>
       </div>
-      <div className="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700 h-14">
-        <div className="flex justify-between text-sm text-gray-600 dark:text-gray-400">
+      <div className="mt-3 sm:mt-4 pt-3 sm:pt-4 border-t border-gray-200 dark:border-gray-700 min-h-12 sm:min-h-14">
+        <div className="flex flex-col sm:flex-row justify-between gap-1 sm:gap-0 text-xs sm:text-sm text-gray-600 dark:text-gray-400">
           {validCadences.length > 0 ? (
             <>
               <span>Min: <strong className="text-gray-800 dark:text-white">{Math.round(minCadence)} spm</strong></span>

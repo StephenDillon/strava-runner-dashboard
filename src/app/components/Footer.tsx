@@ -8,8 +8,8 @@ export default function Footer() {
   return (
     <>
       <footer className="bg-white dark:bg-gray-900 border-t border-gray-200 dark:border-gray-800 mt-auto shrink-0">
-        <div className="container mx-auto px-4 py-6">
-          <div className="flex items-center justify-between">
+        <div className="container mx-auto px-4 py-4 sm:py-6">
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
             <a 
               href="https://www.strava.com" 
               target="_blank" 
@@ -19,14 +19,14 @@ export default function Footer() {
               <img 
                 src="/api_logo_pwrdBy_strava_horiz_orange.png" 
                 alt="Powered by Strava"
-                className="h-10"
+                className="h-8 sm:h-10"
               />
             </a>
-            <div className="text-right space-x-4">
-              <span className="text-gray-600 dark:text-gray-400 text-sm">
+            <div className="text-center sm:text-right flex flex-col sm:flex-row gap-2 sm:gap-4">
+              <span className="text-gray-600 dark:text-gray-400 text-xs sm:text-sm">
                 For informational purposes only.
               </span>
-              <span className="text-gray-600 dark:text-gray-400 text-sm">
+              <span className="text-gray-600 dark:text-gray-400 text-xs sm:text-sm">
                 © {currentYear} Weekly Running Dashboard. All rights reserved.
               </span>
             </div>
