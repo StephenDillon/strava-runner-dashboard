@@ -87,7 +87,8 @@ export default function WeeklyMileageChart({ endDate, unit }: WeeklyMileageChart
       miles: weeklyMetrics[index]?.totalDistance || 0,
       distance: unit === 'kilometers' 
         ? milesToKm(weeklyMetrics[index]?.totalDistance || 0)
-        : (weeklyMetrics[index]?.totalDistance || 0)
+        : (weeklyMetrics[index]?.totalDistance || 0),
+      activityCount: weeklyMetrics[index]?.activities?.length || 0
     }));
   }, [weeks, weeklyMetrics, unit, weekStartDay]);
   
@@ -139,14 +140,21 @@ export default function WeeklyMileageChart({ endDate, unit }: WeeklyMileageChart
                 onMouseEnter={() => handleMouseEnter(index)}
                 onMouseLeave={handleMouseLeave}
               >
-                <div
-                  className="bg-linear-to-r from-blue-500 to-indigo-600 h-full rounded-full flex items-center justify-end pr-2 sm:pr-3 transition-all duration-500 cursor-pointer hover:opacity-90"
-                  style={{ width: `${(data.distance / maxDistance) * 100}%` }}
-                >
-                  <span className="text-white text-xs sm:text-sm font-semibold">
-                    {data.distance.toFixed(1)} {unitLabel}
-                  </span>
-                </div>
+                {data.distance > 0 && (
+                  <div
+                    className="bg-linear-to-r from-blue-500 to-indigo-600 h-full rounded-full flex items-center justify-between px-2 sm:px-3 transition-all duration-500 cursor-pointer hover:opacity-90"
+                    style={{ width: `${(data.distance / maxDistance) * 100}%` }}
+                  >
+                    {data.activityCount > 0 && (
+                      <span className="text-white text-xs sm:text-sm font-semibold bg-white/20 rounded-full px-2 py-0.5">
+                        {data.activityCount}
+                      </span>
+                    )}
+                    <span className="text-white text-xs sm:text-sm font-semibold">
+                      {data.distance.toFixed(1)} {unitLabel}
+                    </span>
+                  </div>
+                )}
                 
                 {isOpen(index) && weekActivities.length > 0 && (
                   <div ref={(el) => { tooltipRefs.current[index] = el; }}>

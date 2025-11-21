@@ -172,14 +172,16 @@ export default function LongestDistanceChart({ endDate, unit }: LongestDistanceC
                   onMouseEnter={() => handleMouseEnter(index)}
                   onMouseLeave={handleMouseLeave}
                 >
-                  <div
-                    className="bg-linear-to-r from-blue-500 to-indigo-600 h-full rounded-full flex items-center justify-end pr-2 sm:pr-3 transition-all duration-500 cursor-pointer hover:opacity-90"
-                    style={{ width: `${(data.distance / maxDistance) * 100}%` }}
-                  >
-                    <span className="text-white text-xs sm:text-sm font-semibold">
-                      {data.distance.toFixed(1)} {unitLabel}
-                    </span>
-                  </div>
+                  {data.distance > 0 && (
+                    <div
+                      className="bg-linear-to-r from-blue-500 to-indigo-600 h-full rounded-full flex items-center justify-end pr-2 sm:pr-3 transition-all duration-500 cursor-pointer hover:opacity-90"
+                      style={{ width: `${(data.distance / maxDistance) * 100}%` }}
+                    >
+                      <span className="text-white text-xs sm:text-sm font-semibold">
+                        {data.distance.toFixed(1)} {unitLabel}
+                      </span>
+                    </div>
+                  )}
                 
                 {open && weekActivities.length > 0 && (
                   <div ref={(el) => { tooltipRefs.current[index] = el; }}>
