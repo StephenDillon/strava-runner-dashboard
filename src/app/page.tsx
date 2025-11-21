@@ -7,6 +7,7 @@ import LongestDistanceChart from "./components/LongestDistanceChart";
 import AvgCadenceChart from "./components/AvgCadenceChart";
 import DetailedMetricsTable from "./components/DetailedMetricsTable";
 import PaceAnalysisChart from "./components/PaceAnalysisChart";
+import DistanceAnalysisChart from "./components/DistanceAnalysisChart";
 import ConnectStrava from "./components/ConnectStrava";
 import { getLastFullWeek } from "./utils/dateUtils";
 import { useUnit } from "./context/UnitContext";
@@ -14,7 +15,7 @@ import { useStravaAuth } from "./context/StravaAuthContext";
 import { useWeekStart } from "./context/WeekStartContext";
 import { useActivityType } from "./context/ActivityTypeContext";
 
-type TabType = 'dashboard' | 'detailed' | 'pace';
+type TabType = 'dashboard' | 'detailed' | 'pace' | 'distance';
 
 export default function Home() {
   const { weekStartDay } = useWeekStart();
@@ -114,6 +115,16 @@ export default function Home() {
             >
               Pace Analysis
             </button>
+            <button
+              onClick={() => setActiveTab('distance')}
+              className={`py-4 px-1 border-b-2 font-medium text-sm transition-colors ${
+                activeTab === 'distance'
+                  ? 'border-blue-500 text-blue-600 dark:text-blue-400'
+                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 dark:text-gray-400 dark:hover:text-gray-300'
+              }`}
+            >
+              Distance Analysis
+            </button>
           </nav>
         </div>
 
@@ -139,6 +150,10 @@ export default function Home() {
 
         {activeTab === 'pace' && (
           <PaceAnalysisChart endDate={selectedWeek} unit={unit} />
+        )}
+
+        {activeTab === 'distance' && (
+          <DistanceAnalysisChart endDate={selectedWeek} unit={unit} />
         )}
       </div>
     </div>
