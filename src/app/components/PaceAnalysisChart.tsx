@@ -41,6 +41,7 @@ export default function PaceAnalysisChart({ endDate, unit }: PaceAnalysisChartPr
   const { activityType } = useActivityType();
   const { isActivityDisabled, toggleActivity } = useDisabledActivities();
   const weeks = getWeeksBack(weeksToDisplay, endDate);
+  const [hoveredDot, setHoveredDot] = useState<number | null>(null);
   const [clickedDot, setClickedDot] = useState<number | null>(null);
   const [tooltipPosition, setTooltipPosition] = useState<{ x: number; y: number } | null>(null);
   const dotRefs = useRef<(SVGCircleElement | null)[]>([]);
@@ -65,7 +66,7 @@ export default function PaceAnalysisChart({ endDate, unit }: PaceAnalysisChartPr
     return [...activities]
       .filter(activity => activity.average_speed > 0)
       .sort((a, b) => 
-        new Date(b.start_date).getTime() - new Date(a.start_date).getTime()
+        new Date(a.start_date).getTime() - new Date(b.start_date).getTime()
       );
   }, [activities]);
 
@@ -133,36 +134,60 @@ export default function PaceAnalysisChart({ endDate, unit }: PaceAnalysisChartPr
     return { slope, intercept, startY, endY };
   }, [paceData]);
 
+  const updateTooltipPosition = (index: number, event: React.MouseEvent<SVGCircleElement>) => {
+    if (chartRef.current) {
+      const svgElement = event.currentTarget.ownerSVGElement;
+      if (svgElement) {
+        const svgRect = svgElement.getBoundingClientRect();
+        const circle = event.currentTarget;
+        const cx = parseFloat(circle.getAttribute('cx') || '0');
+        const cy = parseFloat(circle.getAttribute('cy') || '0');
+        
+        // Convert percentage to pixels
+        const xPos = (cx / 100) * svgRect.width;
+        const yPos = (cy / 100) * svgRect.height;
+        
+        setTooltipPosition({
+          x: xPos,
+          y: yPos
+        });
+      }
+    }
+  };
+
+  const handleDotHover = (index: number, event: React.MouseEvent<SVGCircleElement>) => {
+    // Only show hover tooltip if no dot is clicked (persistent)
+    if (clickedDot === null) {
+      setHoveredDot(index);
+      updateTooltipPosition(index, event);
+    }
+  };
+
   const handleDotClick = (index: number, event: React.MouseEvent<SVGCircleElement>) => {
+    event.stopPropagation();
     if (clickedDot === index) {
+      // Clicking the same dot closes it
       setClickedDot(null);
       setTooltipPosition(null);
     } else {
+      // Click makes it persistent
       setClickedDot(index);
-      if (chartRef.current) {
-        const rect = chartRef.current.getBoundingClientRect();
-        const svgElement = event.currentTarget.ownerSVGElement;
-        if (svgElement) {
-          const svgRect = svgElement.getBoundingClientRect();
-          const circle = event.currentTarget;
-          const cx = parseFloat(circle.getAttribute('cx') || '0');
-          const cy = parseFloat(circle.getAttribute('cy') || '0');
-          
-          // Convert percentage to pixels
-          const xPos = (cx / 100) * svgRect.width;
-          const yPos = (cy / 100) * svgRect.height;
-          
-          setTooltipPosition({
-            x: xPos,
-            y: yPos
-          });
-        }
-      }
+      setHoveredDot(null); // Clear hover state
+      updateTooltipPosition(index, event);
+    }
+  };
+
+  const handleDotLeave = () => {
+    // Only clear hover tooltip if no dot is clicked
+    if (clickedDot === null) {
+      setHoveredDot(null);
+      setTooltipPosition(null);
     }
   };
 
   const handleCloseTooltip = () => {
     setClickedDot(null);
+    setHoveredDot(null);
     setTooltipPosition(null);
   };
 
@@ -284,6 +309,8 @@ export default function PaceAnalysisChart({ endDate, unit }: PaceAnalysisChartPr
                         className="cursor-pointer transition-all"
                         style={{ filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.2))' }}
                         onClick={(e) => handleDotClick(index, e)}
+                        onMouseEnter={(e) => handleDotHover(index, e)}
+                        onMouseLeave={handleDotLeave}
                       />
                       {/* Invisible larger circle for better hover target */}
                       <circle
@@ -293,6 +320,8 @@ export default function PaceAnalysisChart({ endDate, unit }: PaceAnalysisChartPr
                         fill="transparent"
                         className="cursor-pointer"
                         onClick={(e) => handleDotClick(index, e)}
+                        onMouseEnter={(e) => handleDotHover(index, e)}
+                        onMouseLeave={handleDotLeave}
                       />
                     </g>
                   );
@@ -300,7 +329,7 @@ export default function PaceAnalysisChart({ endDate, unit }: PaceAnalysisChartPr
               </svg>
               
               {/* Tooltip - Rendered outside SVG for proper z-index */}
-              {clickedDot !== null && tooltipPosition && sortedActivities[clickedDot] && (
+              {(clickedDot !== null || hoveredDot !== null) && tooltipPosition && sortedActivities[clickedDot ?? hoveredDot ?? 0] && (
                 <div 
                   className="absolute z-9999 pointer-events-auto"
                   style={{
@@ -310,7 +339,7 @@ export default function PaceAnalysisChart({ endDate, unit }: PaceAnalysisChartPr
                   }}
                 >
                   <SingleActivityTooltip
-                    activity={sortedActivities[clickedDot]}
+                    activity={sortedActivities[clickedDot ?? hoveredDot ?? 0]}
                     onClose={handleCloseTooltip}
                     isActivityDisabled={isActivityDisabled}
                     onToggleActivity={toggleActivity}
