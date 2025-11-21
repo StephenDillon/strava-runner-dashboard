@@ -79,7 +79,7 @@ interface WeekMetrics {
 
 export default function DetailedMetricsTable({ endDate, unit }: DetailedMetricsTableProps) {
   const { weekStartDay, weeksToDisplay } = useWeekStart();
-  const { disabledActivities } = useDisabledActivities();
+  const { isActivityDisabled, toggleActivity } = useDisabledActivities();
   const { activityType } = useActivityType();
   const weeks = getWeeksBack(weeksToDisplay, endDate);
   
@@ -113,9 +113,9 @@ export default function DetailedMetricsTable({ endDate, unit }: DetailedMetricsT
   if (loading) {
     return (
       <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6">
-        <h2 className="text-2xl font-bold mb-4 text-gray-800 dark:text-white">Detailed Metrics</h2>
+        <h2 className="text-2xl font-bold mb-4 text-gray-800 dark:text-white">Activities</h2>
         <div className="flex items-center justify-center py-12">
-          <div className="text-gray-500 dark:text-gray-400">Loading metrics...</div>
+          <div className="text-gray-500 dark:text-gray-400">Loading activities...</div>
         </div>
       </div>
     );
@@ -124,9 +124,9 @@ export default function DetailedMetricsTable({ endDate, unit }: DetailedMetricsT
   if (error) {
     return (
       <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6">
-        <h2 className="text-2xl font-bold mb-4 text-gray-800 dark:text-white">Detailed Metrics</h2>
+        <h2 className="text-2xl font-bold mb-4 text-gray-800 dark:text-white">Activities</h2>
         <div className="flex items-center justify-center py-12">
-          <div className="text-red-500">Error loading metrics: {error}</div>
+          <div className="text-red-500">Error loading activities: {error}</div>
         </div>
       </div>
     );
@@ -134,13 +134,16 @@ export default function DetailedMetricsTable({ endDate, unit }: DetailedMetricsT
 
   return (
     <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-4 sm:p-6 overflow-hidden">
-      <h2 className="text-xl sm:text-2xl font-bold mb-4 text-gray-800 dark:text-white">Detailed Metrics</h2>
+      <h2 className="text-xl sm:text-2xl font-bold mb-4 text-gray-800 dark:text-white">Activities</h2>
       <div className="overflow-x-auto -mx-4 sm:mx-0">
         <div className="inline-block min-w-full align-middle">
           <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
             <thead className="bg-gray-50 dark:bg-gray-900">
               <tr>
-                <th className="sticky left-0 z-10 bg-gray-50 dark:bg-gray-900 px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                <th className="sticky left-0 z-10 bg-gray-50 dark:bg-gray-900 px-3 sm:px-6 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                  Enable
+                </th>
+                <th className="sticky left-12 z-10 bg-gray-50 dark:bg-gray-900 px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                   Name
                 </th>
                 <th className="px-3 sm:px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider whitespace-nowrap">
@@ -174,10 +177,19 @@ export default function DetailedMetricsTable({ endDate, unit }: DetailedMetricsT
                 const distance = metersToMiles(activity.distance);
                 const convertedDistance = unit === 'kilometers' ? milesToKm(distance) : distance;
                 const aerobicEfficiency = calculateAerobicEfficiency(activity, unit);
+                const isDisabled = isActivityDisabled(activity.id);
                 
                 return (
-                  <tr key={activity.id}>
-                    <td className="sticky left-0 z-10 bg-white dark:bg-gray-800 px-3 sm:px-6 py-4 text-sm font-medium text-gray-900 dark:text-white max-w-xs truncate">
+                  <tr key={activity.id} className={isDisabled ? 'opacity-50' : ''}>
+                    <td className="sticky left-0 z-10 bg-white dark:bg-gray-800 px-3 sm:px-6 py-4 text-center">
+                      <input
+                        type="checkbox"
+                        checked={!isDisabled}
+                        onChange={() => toggleActivity(activity.id)}
+                        className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600 cursor-pointer"
+                      />
+                    </td>
+                    <td className="sticky left-12 z-10 bg-white dark:bg-gray-800 px-3 sm:px-6 py-4 text-sm font-medium text-gray-900 dark:text-white max-w-xs truncate">
                       {activity.name}
                     </td>
                     <td className="px-3 sm:px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-300 text-right" style={{ fontFamily: monoFont }}>

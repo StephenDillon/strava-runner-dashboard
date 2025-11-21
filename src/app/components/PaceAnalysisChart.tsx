@@ -64,11 +64,11 @@ export default function PaceAnalysisChart({ endDate, unit }: PaceAnalysisChartPr
 
   const sortedActivities = useMemo(() => {
     return [...activities]
-      .filter(activity => activity.average_speed > 0)
+      .filter(activity => activity.average_speed > 0 && !isActivityDisabled(activity.id))
       .sort((a, b) => 
         new Date(a.start_date).getTime() - new Date(b.start_date).getTime()
       );
-  }, [activities]);
+  }, [activities, isActivityDisabled]);
 
   const paceData = useMemo(() => {
     return sortedActivities.map(activity => {
