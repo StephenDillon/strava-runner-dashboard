@@ -42,7 +42,9 @@ export default function PaceAnalysisChart({ endDate, unit }: PaceAnalysisChartPr
   const { isActivityDisabled, toggleActivity } = useDisabledActivities();
   const weeks = getWeeksBack(weeksToDisplay, endDate);
   const [clickedDot, setClickedDot] = useState<number | null>(null);
+  const [tooltipPosition, setTooltipPosition] = useState<{ x: number; y: number } | null>(null);
   const dotRefs = useRef<(SVGCircleElement | null)[]>([]);
+  const chartRef = useRef<HTMLDivElement>(null);
   
   const startDate = useMemo(() => {
     const start = new Date(weeks[0]);
@@ -131,12 +133,37 @@ export default function PaceAnalysisChart({ endDate, unit }: PaceAnalysisChartPr
     return { slope, intercept, startY, endY };
   }, [paceData]);
 
-  const handleDotClick = (index: number) => {
-    setClickedDot(clickedDot === index ? null : index);
+  const handleDotClick = (index: number, event: React.MouseEvent<SVGCircleElement>) => {
+    if (clickedDot === index) {
+      setClickedDot(null);
+      setTooltipPosition(null);
+    } else {
+      setClickedDot(index);
+      if (chartRef.current) {
+        const rect = chartRef.current.getBoundingClientRect();
+        const svgElement = event.currentTarget.ownerSVGElement;
+        if (svgElement) {
+          const svgRect = svgElement.getBoundingClientRect();
+          const circle = event.currentTarget;
+          const cx = parseFloat(circle.getAttribute('cx') || '0');
+          const cy = parseFloat(circle.getAttribute('cy') || '0');
+          
+          // Convert percentage to pixels
+          const xPos = (cx / 100) * svgRect.width;
+          const yPos = (cy / 100) * svgRect.height;
+          
+          setTooltipPosition({
+            x: xPos,
+            y: yPos
+          });
+        }
+      }
+    }
   };
 
   const handleCloseTooltip = () => {
     setClickedDot(null);
+    setTooltipPosition(null);
   };
 
   if (loading) {
@@ -197,7 +224,7 @@ export default function PaceAnalysisChart({ endDate, unit }: PaceAnalysisChartPr
             </div>
             
             {/* Chart area */}
-            <div className="flex-1 relative h-[500px] border-l border-b border-gray-300 dark:border-gray-600 pb-20">
+            <div ref={chartRef} className="flex-1 relative h-[500px] border-l border-b border-gray-300 dark:border-gray-600 pb-20">
               <svg className="absolute inset-0 w-full h-full" style={{ overflow: 'visible' }}>
                 {/* Horizontal grid lines */}
                 {[0, 0.25, 0.5, 0.75, 1].map((percent, idx) => (
@@ -256,7 +283,7 @@ export default function PaceAnalysisChart({ endDate, unit }: PaceAnalysisChartPr
                         fill="rgb(168, 85, 247)"
                         className="cursor-pointer transition-all"
                         style={{ filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.2))' }}
-                        onClick={() => handleDotClick(index)}
+                        onClick={(e) => handleDotClick(index, e)}
                       />
                       {/* Invisible larger circle for better hover target */}
                       <circle
@@ -265,34 +292,34 @@ export default function PaceAnalysisChart({ endDate, unit }: PaceAnalysisChartPr
                         r="15"
                         fill="transparent"
                         className="cursor-pointer"
-                        onClick={() => handleDotClick(index)}
+                        onClick={(e) => handleDotClick(index, e)}
                       />
-                      
-                      {/* Tooltip */}
-                      {clickedDot === index && sortedActivities[index] && (
-                        <foreignObject
-                          x={`${xPercent}%`}
-                          y={`${yPercent}%`}
-                          width="1"
-                          height="1"
-                          style={{ overflow: 'visible' }}
-                        >
-                          <div style={{ position: 'relative' }}>
-                            <SingleActivityTooltip
-                              activity={sortedActivities[index]}
-                              onClose={handleCloseTooltip}
-                              isActivityDisabled={isActivityDisabled}
-                              onToggleActivity={toggleActivity}
-                              unit={unit}
-                              showCadence={activityType === 'running'}
-                            />
-                          </div>
-                        </foreignObject>
-                      )}
                     </g>
                   );
                 })}
               </svg>
+              
+              {/* Tooltip - Rendered outside SVG for proper z-index */}
+              {clickedDot !== null && tooltipPosition && sortedActivities[clickedDot] && (
+                <div 
+                  className="absolute z-9999 pointer-events-auto"
+                  style={{
+                    left: `${tooltipPosition.x}px`,
+                    top: `${tooltipPosition.y}px`,
+                    transform: 'translate(-50%, -100%) translateY(-10px)'
+                  }}
+                >
+                  <SingleActivityTooltip
+                    activity={sortedActivities[clickedDot]}
+                    onClose={handleCloseTooltip}
+                    isActivityDisabled={isActivityDisabled}
+                    onToggleActivity={toggleActivity}
+                    unit={unit}
+                    showCadence={activityType === 'running'}
+                  />
+                </div>
+              )}
+              
               {/* X-axis labels */}
               <div className="absolute inset-x-0 bottom-0 h-20">
                 {paceData.map((data, index) => {
