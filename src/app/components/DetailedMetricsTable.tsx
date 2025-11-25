@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useMemo } from 'react';
+import React, { useMemo, useState } from 'react';
 import { getWeeksBack, formatWeekLabel, formatWeekTooltip } from '../utils/dateUtils';
 import { useStravaActivities } from '../hooks/useStravaActivities';
 import { aggregateActivitiesByWeek, generateWeekStarts, metersToMiles } from '../utils/activityAggregation';
@@ -8,6 +8,9 @@ import { useWeekStart } from '../context/WeekStartContext';
 import { useDisabledActivities } from '../context/DisabledActivitiesContext';
 import { useActivityType } from '../context/ActivityTypeContext';
 import { StravaActivity } from '../types/strava';
+
+type SortField = 'date' | 'name' | 'distance' | 'time' | 'pace' | 'ae' | 'avgHR' | 'maxHR';
+type SortDirection = 'asc' | 'desc';
 
 interface DetailedMetricsTableProps {
   endDate: Date;
@@ -83,6 +86,27 @@ export default function DetailedMetricsTable({ endDate, unit }: DetailedMetricsT
   const { activityType } = useActivityType();
   const weeks = getWeeksBack(weeksToDisplay, endDate);
   
+  const [sortField, setSortField] = useState<SortField>('date');
+  const [sortDirection, setSortDirection] = useState<SortDirection>('desc');
+  const [nameFilter, setNameFilter] = useState('');
+  const [showDisabled, setShowDisabled] = useState(true);
+  
+  const handleSort = (field: SortField) => {
+    if (sortField === field) {
+      setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
+    } else {
+      setSortField(field);
+      setSortDirection('desc');
+    }
+  };
+  
+  const SortIcon = ({ field }: { field: SortField }) => {
+    if (sortField !== field) {
+      return <span className="ml-1 text-gray-400">↕</span>;
+    }
+    return <span className="ml-1">{sortDirection === 'asc' ? '↑' : '↓'}</span>;
+  };
+  
   const startDate = useMemo(() => {
     const start = new Date(weeks[0]);
     start.setHours(0, 0, 0, 0);
@@ -99,10 +123,57 @@ export default function DetailedMetricsTable({ endDate, unit }: DetailedMetricsT
   const { activities, loading, error } = useStravaActivities(startDate, apiEndDate);
 
   const sortedActivities = useMemo(() => {
-    return [...activities].sort((a, b) => 
-      new Date(b.start_date).getTime() - new Date(a.start_date).getTime()
-    );
-  }, [activities]);
+    let filtered = [...activities];
+    
+    // Apply name filter
+    if (nameFilter.trim()) {
+      const filterLower = nameFilter.toLowerCase();
+      filtered = filtered.filter(a => a.name.toLowerCase().includes(filterLower));
+    }
+    
+    // Apply disabled filter
+    if (!showDisabled) {
+      filtered = filtered.filter(a => !isActivityDisabled(a.id));
+    }
+    
+    // Apply sorting
+    filtered.sort((a, b) => {
+      let comparison = 0;
+      
+      switch (sortField) {
+        case 'date':
+          comparison = new Date(a.start_date).getTime() - new Date(b.start_date).getTime();
+          break;
+        case 'name':
+          comparison = a.name.localeCompare(b.name);
+          break;
+        case 'distance':
+          comparison = a.distance - b.distance;
+          break;
+        case 'time':
+          comparison = a.moving_time - b.moving_time;
+          break;
+        case 'pace':
+          comparison = a.average_speed - b.average_speed;
+          break;
+        case 'ae':
+          const aeA = calculateAerobicEfficiency(a, unit);
+          const aeB = calculateAerobicEfficiency(b, unit);
+          comparison = aeA - aeB;
+          break;
+        case 'avgHR':
+          comparison = (a.average_heartrate || 0) - (b.average_heartrate || 0);
+          break;
+        case 'maxHR':
+          comparison = (a.max_heartrate || 0) - (b.max_heartrate || 0);
+          break;
+      }
+      
+      return sortDirection === 'asc' ? comparison : -comparison;
+    });
+    
+    return filtered;
+  }, [activities, sortField, sortDirection, nameFilter, showDisabled, isActivityDisabled, unit]);
 
   const unitLabel = unit === 'kilometers' ? 'km' : 'mi';
   const paceLabel = unit === 'kilometers' ? '/km' : '/mi';
@@ -134,7 +205,27 @@ export default function DetailedMetricsTable({ endDate, unit }: DetailedMetricsT
 
   return (
     <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-4 sm:p-6 overflow-hidden">
-      <h2 className="text-xl sm:text-2xl font-bold mb-4 text-gray-800 dark:text-white">Activities</h2>
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 mb-4">
+        <h2 className="text-xl sm:text-2xl font-bold text-gray-800 dark:text-white">Activities</h2>
+        <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
+          <input
+            type="text"
+            placeholder="Filter by name..."
+            value={nameFilter}
+            onChange={(e) => setNameFilter(e.target.value)}
+            className="px-3 py-1.5 text-sm border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+          />
+          <label className="flex items-center gap-2 text-sm text-gray-700 dark:text-gray-300 cursor-pointer">
+            <input
+              type="checkbox"
+              checked={showDisabled}
+              onChange={(e) => setShowDisabled(e.target.checked)}
+              className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600 cursor-pointer"
+            />
+            Show disabled
+          </label>
+        </div>
+      </div>
       <div className="overflow-x-auto -mx-4 sm:mx-0">
         <div className="inline-block min-w-full align-middle">
           <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
@@ -143,32 +234,54 @@ export default function DetailedMetricsTable({ endDate, unit }: DetailedMetricsT
                 <th className="sticky left-0 z-10 bg-gray-50 dark:bg-gray-900 px-3 sm:px-6 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                   Disabled
                 </th>
-                <th className="sticky left-12 z-10 bg-gray-50 dark:bg-gray-900 px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                  Name
-                </th>
-                <th className="px-3 sm:px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider whitespace-nowrap">
-                  Date
-                </th>
-                <th className="px-3 sm:px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider whitespace-nowrap">
-                  Distance
-                </th>
-                <th className="px-3 sm:px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider whitespace-nowrap">
-                  Time
-                </th>
-                <th className="px-3 sm:px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider whitespace-nowrap">
-                  Pace
+                <th 
+                  className="sticky left-12 z-10 bg-gray-50 dark:bg-gray-900 px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider cursor-pointer hover:text-gray-700 dark:hover:text-gray-300"
+                  onClick={() => handleSort('name')}
+                >
+                  Name<SortIcon field="name" />
                 </th>
                 <th 
-                  className="px-3 sm:px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider whitespace-nowrap cursor-help"
+                  className="px-3 sm:px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider whitespace-nowrap cursor-pointer hover:text-gray-700 dark:hover:text-gray-300"
+                  onClick={() => handleSort('date')}
+                >
+                  Date<SortIcon field="date" />
+                </th>
+                <th 
+                  className="px-3 sm:px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider whitespace-nowrap cursor-pointer hover:text-gray-700 dark:hover:text-gray-300"
+                  onClick={() => handleSort('distance')}
+                >
+                  Distance<SortIcon field="distance" />
+                </th>
+                <th 
+                  className="px-3 sm:px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider whitespace-nowrap cursor-pointer hover:text-gray-700 dark:hover:text-gray-300"
+                  onClick={() => handleSort('time')}
+                >
+                  Time<SortIcon field="time" />
+                </th>
+                <th 
+                  className="px-3 sm:px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider whitespace-nowrap cursor-pointer hover:text-gray-700 dark:hover:text-gray-300"
+                  onClick={() => handleSort('pace')}
+                >
+                  Pace<SortIcon field="pace" />
+                </th>
+                <th 
+                  className="px-3 sm:px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider whitespace-nowrap cursor-pointer hover:text-gray-700 dark:hover:text-gray-300"
+                  onClick={() => handleSort('ae')}
                   title="Aerobic Efficiency: Speed per heartbeat(AVG Speed / AVG Heart Rate) × 100. Higher values indicate better aerobic fitness and efficiency."
                 >
-                  AE
+                  AE<SortIcon field="ae" />
                 </th>
-                <th className="px-3 sm:px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider whitespace-nowrap">
-                  Avg HR
+                <th 
+                  className="px-3 sm:px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider whitespace-nowrap cursor-pointer hover:text-gray-700 dark:hover:text-gray-300"
+                  onClick={() => handleSort('avgHR')}
+                >
+                  Avg HR<SortIcon field="avgHR" />
                 </th>
-                <th className="px-3 sm:px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider whitespace-nowrap">
-                  Max HR
+                <th 
+                  className="px-3 sm:px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider whitespace-nowrap cursor-pointer hover:text-gray-700 dark:hover:text-gray-300"
+                  onClick={() => handleSort('maxHR')}
+                >
+                  Max HR<SortIcon field="maxHR" />
                 </th>
               </tr>
             </thead>
