@@ -9,7 +9,6 @@ import { useDisabledActivities } from '../context/DisabledActivitiesContext';
 import { useActivityType } from '../context/ActivityTypeContext';
 import { StravaActivity } from '../types/strava';
 import ActivityTooltipItem from './ActivityTooltipItem';
-import WeekActivitiesTooltip from './WeekActivitiesTooltip';
 
 interface WeekData {
   week: string;
@@ -158,7 +157,7 @@ export default function LongestDistanceChart({ endDate, unit }: LongestDistanceC
       <div className="space-y-2 sm:space-y-3 flex-1" style={{ minHeight: '250px' }}>
           {convertedData.map((data, index) => {
             const open = isOpen(index);
-            const weekActivities = weeklyLongestRuns[index]?.allActivities || [];
+            const longestActivity = weeklyLongestRuns[index]?.longestRun;
             
             return (
               <div key={index} className="flex items-center gap-2 sm:gap-3 relative">
@@ -183,15 +182,29 @@ export default function LongestDistanceChart({ endDate, unit }: LongestDistanceC
                     </div>
                   )}
                 
-                {open && weekActivities.length > 0 && (
+                {open && longestActivity && (
                   <div ref={(el) => { tooltipRefs.current[index] = el; }}>
-                    <WeekActivitiesTooltip
-                      activities={weekActivities}
-                      onClose={() => setLockedWeek(null)}
-                      isActivityDisabled={isActivityDisabled}
-                      onToggleActivity={toggleActivity}
-                      unit={unit}
-                    />
+                    <div className="absolute left-0 sm:left-0 top-10 z-50 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg shadow-xl p-2 sm:p-3 w-[calc(100vw-2rem)] sm:w-auto sm:min-w-[300px] max-w-[400px]">
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setLockedWeek(null);
+                        }}
+                        className="absolute top-1 right-1 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200"
+                      >
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                      </button>
+                      <ActivityTooltipItem
+                        activity={longestActivity}
+                        isDisabled={isActivityDisabled(longestActivity.id)}
+                        onToggle={toggleActivity}
+                        distance={data.distance.toFixed(2)}
+                        unitLabel={unitLabel}
+                        showCadence={activityType === 'running'}
+                      />
+                    </div>
                   </div>
                 )}
               </div>

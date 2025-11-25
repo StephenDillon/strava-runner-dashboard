@@ -15,7 +15,7 @@ import { useStravaAuth } from "./context/StravaAuthContext";
 import { useWeekStart } from "./context/WeekStartContext";
 import { useActivityType } from "./context/ActivityTypeContext";
 
-type TabType = 'dashboard' | 'detailed' | 'pace' | 'distance';
+type TabType = 'dashboard' | 'detailed' | 'pace' | 'distance' | 'cadence';
 
 export default function Home() {
   const { weekStartDay } = useWeekStart();
@@ -125,6 +125,18 @@ export default function Home() {
             >
               Distance Analysis
             </button>
+            {activityType === 'running' && (
+              <button
+                onClick={() => setActiveTab('cadence')}
+                className={`py-4 px-1 border-b-2 font-medium text-sm transition-colors ${
+                  activeTab === 'cadence'
+                    ? 'border-blue-500 text-blue-600 dark:text-blue-400'
+                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 dark:text-gray-400 dark:hover:text-gray-300'
+                }`}
+              >
+                Cadence
+              </button>
+            )}
           </nav>
         </div>
 
@@ -135,12 +147,6 @@ export default function Home() {
               <WeeklyMileageChart endDate={selectedWeek} unit={unit} />
               <LongestDistanceChart endDate={selectedWeek} unit={unit} />
             </div>
-
-            {activityType === 'running' && (
-              <div className="grid grid-cols-1 gap-4 sm:gap-6 md:gap-8 mb-4 sm:mb-6 md:mb-8">
-                <AvgCadenceChart endDate={selectedWeek} />
-              </div>
-            )}
           </>
         )}
 
@@ -154,6 +160,19 @@ export default function Home() {
 
         {activeTab === 'distance' && (
           <DistanceAnalysisChart endDate={selectedWeek} unit={unit} />
+        )}
+
+        {activeTab === 'cadence' && (
+          activityType === 'running' ? (
+            <AvgCadenceChart endDate={selectedWeek} />
+          ) : (
+            <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6">
+              <h2 className="text-2xl font-bold mb-4 text-gray-800 dark:text-white">Average Cadence</h2>
+              <div className="flex items-center justify-center py-12">
+                <div className="text-gray-500 dark:text-gray-400">Cadence data is only available for running activities</div>
+              </div>
+            </div>
+          )
         )}
       </div>
     </div>

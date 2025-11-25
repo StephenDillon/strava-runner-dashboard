@@ -89,9 +89,9 @@ export default function AvgCadenceChart({ endDate }: AvgCadenceChartProps) {
   
   if (loading) {
     return (
-      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-4 sm:p-6 flex flex-col h-full">
+      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-4 sm:p-6">
         <h2 className="text-xl sm:text-2xl font-bold mb-3 sm:mb-4 text-gray-800 dark:text-white">Average Cadence</h2>
-        <div className="flex-1 flex items-center justify-center">
+        <div className="flex items-center justify-center" style={{ height: '350px' }}>
           <div className="text-gray-500 dark:text-gray-400">Loading activities...</div>
         </div>
       </div>
@@ -100,9 +100,9 @@ export default function AvgCadenceChart({ endDate }: AvgCadenceChartProps) {
 
   if (error) {
     return (
-      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-4 sm:p-6 flex flex-col h-full">
+      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-4 sm:p-6">
         <h2 className="text-xl sm:text-2xl font-bold mb-3 sm:mb-4 text-gray-800 dark:text-white">Average Cadence</h2>
-        <div className="flex-1 flex items-center justify-center">
+        <div className="flex items-center justify-center" style={{ height: '350px' }}>
           <div className="text-red-500">Error loading activities: {error}</div>
         </div>
       </div>
@@ -110,12 +110,12 @@ export default function AvgCadenceChart({ endDate }: AvgCadenceChartProps) {
   }
   
   return (
-    <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-4 sm:p-6 flex flex-col h-full">
+    <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-4 sm:p-6">
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-3 sm:mb-4 gap-1 sm:gap-0">
         <h2 className="text-xl sm:text-2xl font-bold text-gray-800 dark:text-white">Average Cadence</h2>
         <span className="text-[10px] sm:text-xs text-gray-500 dark:text-gray-400 italic">Tap bar to view activities</span>
       </div>
-      <div className="relative bg-gray-50 dark:bg-gray-900 rounded-lg p-2 sm:p-4 pt-6 sm:pt-8 flex-1" style={{ minHeight: '250px' }}>
+      <div className="relative bg-gray-50 dark:bg-gray-900 rounded-lg p-2 sm:p-4 pt-6 sm:pt-8" style={{ minHeight: '350px', height: '350px' }}>
         <div className="h-full flex items-end justify-around gap-1 sm:gap-2">
           {chartData.map((data, index) => {
             const heightPercent = data.cadence && range > 0

@@ -141,7 +141,7 @@ export default function DetailedMetricsTable({ endDate, unit }: DetailedMetricsT
             <thead className="bg-gray-50 dark:bg-gray-900">
               <tr>
                 <th className="sticky left-0 z-10 bg-gray-50 dark:bg-gray-900 px-3 sm:px-6 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                  Enable
+                  Disabled
                 </th>
                 <th className="sticky left-12 z-10 bg-gray-50 dark:bg-gray-900 px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                   Name
@@ -180,37 +180,44 @@ export default function DetailedMetricsTable({ endDate, unit }: DetailedMetricsT
                 const isDisabled = isActivityDisabled(activity.id);
                 
                 return (
-                  <tr key={activity.id} className={isDisabled ? 'opacity-50' : ''}>
+                  <tr key={activity.id}>
                     <td className="sticky left-0 z-10 bg-white dark:bg-gray-800 px-3 sm:px-6 py-4 text-center">
                       <input
                         type="checkbox"
-                        checked={!isDisabled}
+                        checked={isDisabled}
                         onChange={() => toggleActivity(activity.id)}
                         className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600 cursor-pointer"
                       />
                     </td>
-                    <td className="sticky left-12 z-10 bg-white dark:bg-gray-800 px-3 sm:px-6 py-4 text-sm font-medium text-gray-900 dark:text-white max-w-xs truncate">
-                      {activity.name}
+                    <td className={`sticky left-12 z-10 bg-white dark:bg-gray-800 px-3 sm:px-6 py-4 text-sm font-medium max-w-xs truncate ${isDisabled ? 'line-through' : ''}`}>
+                      <a
+                        href={`https://www.strava.com/activities/${activity.id}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 hover:underline"
+                      >
+                        {activity.name}
+                      </a>
                     </td>
-                    <td className="px-3 sm:px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-300 text-right" style={{ fontFamily: monoFont }}>
+                    <td className={`px-3 sm:px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-300 text-right ${isDisabled ? 'line-through' : ''}`} style={{ fontFamily: monoFont }}>
                       {formatDate(activity.start_date)}
                     </td>
-                    <td className="px-3 sm:px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-300 text-right" style={{ fontFamily: monoFont }}>
+                    <td className={`px-3 sm:px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-300 text-right ${isDisabled ? 'line-through' : ''}`} style={{ fontFamily: monoFont }}>
                       {convertedDistance.toFixed(2)} {unitLabel}
                     </td>
-                    <td className="px-3 sm:px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-300 text-right" style={{ fontFamily: monoFont }}>
+                    <td className={`px-3 sm:px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-300 text-right ${isDisabled ? 'line-through' : ''}`} style={{ fontFamily: monoFont }}>
                       {formatTime(activity.moving_time)}
                     </td>
-                    <td className="px-3 sm:px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-300 text-right" style={{ fontFamily: monoFont }}>
+                    <td className={`px-3 sm:px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-300 text-right ${isDisabled ? 'line-through' : ''}`} style={{ fontFamily: monoFont }}>
                       {formatPace(activity.average_speed, unit)} {paceLabel}
                     </td>
-                    <td className="px-3 sm:px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-300 text-right" style={{ fontFamily: monoFont }}>
+                    <td className={`px-3 sm:px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-300 text-right ${isDisabled ? 'line-through' : ''}`} style={{ fontFamily: monoFont }}>
                       {aerobicEfficiency > 0 ? aerobicEfficiency.toFixed(2) : '-'}
                     </td>
-                    <td className="px-3 sm:px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-300 text-right" style={{ fontFamily: monoFont }}>
+                    <td className={`px-3 sm:px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-300 text-right ${isDisabled ? 'line-through' : ''}`} style={{ fontFamily: monoFont }}>
                       {activity.average_heartrate ? Math.round(activity.average_heartrate) : '-'}
                     </td>
-                    <td className="px-3 sm:px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-300 text-right" style={{ fontFamily: monoFont }}>
+                    <td className={`px-3 sm:px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-300 text-right ${isDisabled ? 'line-through' : ''}`} style={{ fontFamily: monoFont }}>
                       {activity.max_heartrate ? Math.round(activity.max_heartrate) : '-'}
                     </td>
                   </tr>
