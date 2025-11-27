@@ -10,12 +10,14 @@ import PaceAnalysisChart from "./components/PaceAnalysisChart";
 import DistanceAnalysisChart from "./components/DistanceAnalysisChart";
 import ConnectStrava from "./components/ConnectStrava";
 import HeartRateZonesConfig from "./components/HeartRateZonesConfig";
+import EightyTwentyChart from "./components/EightyTwentyChart";
 import { getLastFullWeek } from "./utils/dateUtils";
 import { useUnit } from "./context/UnitContext";
 import { useStravaAuth } from "./context/StravaAuthContext";
 import { useWeekStart } from "./context/WeekStartContext";
 import { useActivityType } from "./context/ActivityTypeContext";
 import { useConfig } from "./components/ClientLayout";
+import { useHeartRateZones } from "./context/HeartRateZonesContext";
 
 type TabType = 'dashboard' | 'detailed' | 'pace' | 'distance' | 'cadence';
 
@@ -28,6 +30,7 @@ export default function Home() {
   const { activityType } = useActivityType();
   const [isCheckingAuth, setIsCheckingAuth] = useState(true);
   const { showConfig } = useConfig();
+  const { enabled: hrZonesEnabled } = useHeartRateZones();
 
   // Check for auth success in URL on mount
   useEffect(() => {
@@ -152,6 +155,11 @@ export default function Home() {
               <WeeklyMileageChart endDate={selectedWeek} unit={unit} />
               <LongestDistanceChart endDate={selectedWeek} unit={unit} />
             </div>
+            {hrZonesEnabled && (
+              <div className="mb-4 sm:mb-6 md:mb-8">
+                <EightyTwentyChart endDate={selectedWeek} unit={unit} />
+              </div>
+            )}
           </>
         )}
 
