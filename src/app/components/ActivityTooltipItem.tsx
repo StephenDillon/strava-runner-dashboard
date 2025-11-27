@@ -97,6 +97,9 @@ export default function ActivityTooltipItem({
         </div>
         <div className="text-gray-600 dark:text-gray-400">
           {distance} {unitLabel} • {pace}/{unitLabel}
+          {activity.average_heartrate && (
+            <> • {Math.round(activity.average_heartrate)} bpm</>
+          )}
         </div>
       </div>
     </div>

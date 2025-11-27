@@ -9,11 +9,15 @@ import DetailedMetricsTable from "./components/DetailedMetricsTable";
 import PaceAnalysisChart from "./components/PaceAnalysisChart";
 import DistanceAnalysisChart from "./components/DistanceAnalysisChart";
 import ConnectStrava from "./components/ConnectStrava";
+import HeartRateZonesConfig from "./components/HeartRateZonesConfig";
+import EightyTwentyChart from "./components/EightyTwentyChart";
 import { getLastFullWeek } from "./utils/dateUtils";
 import { useUnit } from "./context/UnitContext";
 import { useStravaAuth } from "./context/StravaAuthContext";
 import { useWeekStart } from "./context/WeekStartContext";
 import { useActivityType } from "./context/ActivityTypeContext";
+import { useConfig } from "./components/ClientLayout";
+import { useHeartRateZones } from "./context/HeartRateZonesContext";
 
 type TabType = 'dashboard' | 'detailed' | 'pace' | 'distance' | 'cadence';
 
@@ -25,6 +29,8 @@ export default function Home() {
   const { isAuthenticated, setIsAuthenticated } = useStravaAuth();
   const { activityType } = useActivityType();
   const [isCheckingAuth, setIsCheckingAuth] = useState(true);
+  const { showConfig } = useConfig();
+  const { enabled: hrZonesEnabled } = useHeartRateZones();
 
   // Check for auth success in URL on mount
   useEffect(() => {
@@ -81,6 +87,8 @@ export default function Home() {
     <div className="font-sans bg-linear-to-br from-blue-50 to-indigo-100 dark:from-gray-900 dark:to-gray-800">
       <div className="max-w-7xl mx-auto py-4 sm:py-8 md:py-12 px-3 sm:px-4">
         <WeekSelector selectedWeek={selectedWeek} onWeekChange={setSelectedWeek} />
+        
+        {showConfig && <HeartRateZonesConfig />}
         
         {/* Tab Navigation */}
         <div className="mb-6 border-b border-gray-200 dark:border-gray-700">
@@ -147,6 +155,11 @@ export default function Home() {
               <WeeklyMileageChart endDate={selectedWeek} unit={unit} />
               <LongestDistanceChart endDate={selectedWeek} unit={unit} />
             </div>
+            {hrZonesEnabled && (
+              <div className="mb-4 sm:mb-6 md:mb-8">
+                <EightyTwentyChart endDate={selectedWeek} unit={unit} />
+              </div>
+            )}
           </>
         )}
 
