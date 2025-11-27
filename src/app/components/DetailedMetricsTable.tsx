@@ -9,7 +9,7 @@ import { useDisabledActivities } from '../context/DisabledActivitiesContext';
 import { useActivityType } from '../context/ActivityTypeContext';
 import { StravaActivity } from '../types/strava';
 
-type SortField = 'date' | 'name' | 'distance' | 'time' | 'pace' | 'ae' | 'avgHR' | 'maxHR';
+type SortField = 'date' | 'name' | 'distance' | 'time' | 'pace' | 'ae' | 'avgHR' | 'maxHR' | 'cadence';
 type SortDirection = 'asc' | 'desc';
 
 interface DetailedMetricsTableProps {
@@ -167,6 +167,9 @@ export default function DetailedMetricsTable({ endDate, unit }: DetailedMetricsT
         case 'maxHR':
           comparison = (a.max_heartrate || 0) - (b.max_heartrate || 0);
           break;
+        case 'cadence':
+          comparison = (a.average_cadence || 0) - (b.average_cadence || 0);
+          break;
       }
       
       return sortDirection === 'asc' ? comparison : -comparison;
@@ -283,6 +286,12 @@ export default function DetailedMetricsTable({ endDate, unit }: DetailedMetricsT
                 >
                   Max HR<SortIcon field="maxHR" />
                 </th>
+                <th 
+                  className="px-3 sm:px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider whitespace-nowrap cursor-pointer hover:text-gray-700 dark:hover:text-gray-300"
+                  onClick={() => handleSort('cadence')}
+                >
+                  Cadence<SortIcon field="cadence" />
+                </th>
               </tr>
             </thead>
             <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
@@ -332,6 +341,9 @@ export default function DetailedMetricsTable({ endDate, unit }: DetailedMetricsT
                     </td>
                     <td className={`px-3 sm:px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-300 text-right ${isDisabled ? 'line-through' : ''}`} style={{ fontFamily: monoFont }}>
                       {activity.max_heartrate ? Math.round(activity.max_heartrate) : '-'}
+                    </td>
+                    <td className={`px-3 sm:px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-300 text-right ${isDisabled ? 'line-through' : ''}`} style={{ fontFamily: monoFont }}>
+                      {activity.average_cadence ? Math.round(activity.average_cadence * 2) : '-'}
                     </td>
                   </tr>
                 );

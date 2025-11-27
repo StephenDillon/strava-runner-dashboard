@@ -164,6 +164,7 @@ export default function WeeklyMileageChart({ endDate, unit }: WeeklyMileageChart
                       isActivityDisabled={isActivityDisabled}
                       onToggleActivity={toggleActivity}
                       unit={unit}
+                      showCadence={true}
                     />
                   </div>
                 )}

@@ -27,6 +27,9 @@ export default function SingleActivityTooltip({
     ? (metersToMiles(activity.distance) * 1.60934).toFixed(2)
     : metersToMiles(activity.distance).toFixed(2);
 
+  // Always show cadence for running activities
+  const isRunning = activity.type === 'Run';
+
   return (
     <div className="absolute left-0 sm:left-0 top-10 z-50 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg shadow-xl p-2 sm:p-3 w-[calc(100vw-2rem)] sm:w-auto sm:min-w-[300px] max-w-[400px]">
       <button
@@ -47,7 +50,7 @@ export default function SingleActivityTooltip({
         onToggle={onToggleActivity}
         distance={distance}
         unitLabel={unitLabel}
-        showCadence={showCadence}
+        showCadence={isRunning}
       />
     </div>
   );

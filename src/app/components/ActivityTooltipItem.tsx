@@ -20,6 +20,33 @@ export default function ActivityTooltipItem({
   unitLabel,
   showCadence = false
 }: ActivityTooltipItemProps) {
+  // Format pace (min/mile or min/km)
+  const formatPace = (metersPerSecond: number): string => {
+    if (!metersPerSecond || metersPerSecond === 0) return 'N/A';
+    const minutesPerUnit = unitLabel === 'km' 
+      ? 16.6667 / metersPerSecond  // minutes per km
+      : 26.8224 / metersPerSecond; // minutes per mile
+    const mins = Math.floor(minutesPerUnit);
+    const secs = Math.round((minutesPerUnit - mins) * 60);
+    return `${mins}:${secs.toString().padStart(2, '0')}`;
+  };
+
+  // Format time
+  const formatTime = (seconds: number): string => {
+    if (seconds === 0 || !isFinite(seconds)) return 'N/A';
+    const hours = Math.floor(seconds / 3600);
+    const mins = Math.floor((seconds % 3600) / 60);
+    const secs = Math.round(seconds % 60);
+    
+    if (hours > 0) {
+      return `${hours}:${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+    }
+    return `${mins}:${secs.toString().padStart(2, '0')}`;
+  };
+
+  const pace = formatPace(activity.average_speed);
+  const time = formatTime(activity.moving_time);
+  
   return (
     <div
       className={`flex items-center gap-2 py-1 px-2 rounded transition-colors ${
@@ -58,7 +85,7 @@ export default function ActivityTooltipItem({
         >
           View on Strava
         </a>
-        <div className={`${
+        <div className={`font-medium ${
           isDisabled
             ? 'text-gray-500 dark:text-gray-400 line-through'
             : 'text-gray-900 dark:text-gray-100'
@@ -66,13 +93,11 @@ export default function ActivityTooltipItem({
           {activity.name}
         </div>
         <div className="text-gray-600 dark:text-gray-400">
-          {distance} {unitLabel} • {new Date(activity.start_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+          {new Date(activity.start_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })} • {time}
         </div>
-        {showCadence && activity.average_cadence && (
-          <div className="text-gray-600 dark:text-gray-400">
-            Cadence: {Math.round(activity.average_cadence * 2)} spm
-          </div>
-        )}
+        <div className="text-gray-600 dark:text-gray-400">
+          {distance} {unitLabel} • {pace}/{unitLabel}
+        </div>
       </div>
     </div>
   );
