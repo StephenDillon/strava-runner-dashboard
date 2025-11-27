@@ -81,15 +81,18 @@ export default function WeeklyMileageChart({ endDate, unit }: WeeklyMileageChart
   }, [activities, endDate, disabledActivities, weeksToDisplay]);
 
   const convertedData = useMemo(() => {
-    return weeks.map((date, index) => ({
+    const data = weeks.map((date, index) => ({
       week: formatWeekLabel(date),
       weekTooltip: formatWeekTooltip(date, weekStartDay),
+      weekStartDate: new Date(date),
       miles: weeklyMetrics[index]?.totalDistance || 0,
       distance: unit === 'kilometers' 
         ? milesToKm(weeklyMetrics[index]?.totalDistance || 0)
         : (weeklyMetrics[index]?.totalDistance || 0),
       activityCount: weeklyMetrics[index]?.activities?.length || 0
     }));
+    // Reverse to show newest first
+    return data.reverse();
   }, [weeks, weeklyMetrics, unit, weekStartDay]);
   
   const maxDistance = Math.max(...convertedData.map(d => d.distance), 1);
@@ -126,12 +129,20 @@ export default function WeeklyMileageChart({ endDate, unit }: WeeklyMileageChart
       </div>
       <div className="space-y-3 flex-1" style={{ minHeight: '300px' }}>
         {convertedData.map((data, index) => {
-          const weekActivities = weeklyMetrics[index]?.activities || [];
+          // Get the original index (reversed)
+          const originalIndex = convertedData.length - 1 - index;
+          const weekActivities = weeklyMetrics[originalIndex]?.activities || [];
+          
+          // Check if current date is within this week
+          const now = new Date();
+          const weekEnd = new Date(data.weekStartDate);
+          weekEnd.setDate(weekEnd.getDate() + 7);
+          const isCurrentWeek = now >= data.weekStartDate && now < weekEnd;
           
           return (
             <div key={index} className="flex items-center gap-3 relative">
-              <div className="w-20 text-sm font-medium text-gray-600 dark:text-gray-300 cursor-help" title={data.weekTooltip}>
-                {data.week}
+              <div className={`w-20 text-sm font-medium text-gray-600 dark:text-gray-300 cursor-help ${isCurrentWeek ? 'font-bold' : ''}`} title={data.weekTooltip}>
+                {isCurrentWeek ? 'Current Week' : data.week}
               </div>
               <div 
                 ref={(el) => { barRefs.current[index] = el; }}

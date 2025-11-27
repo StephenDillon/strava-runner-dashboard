@@ -110,9 +110,10 @@ export default function EightyTwentyChart({ endDate, unit }: EightyTwentyChartPr
   }, [activities, endDate, disabledActivities, weeksToDisplay, zones, maxHeartRate]);
 
   const convertedData = useMemo(() => {
-    return weeks.map((date, index) => ({
+    const data = weeks.map((date, index) => ({
       week: formatWeekLabel(date),
       weekTooltip: formatWeekTooltip(date, weekStartDay),
+      weekStartDate: new Date(date),
       easyMiles: unit === 'kilometers' 
         ? milesToKm(weeklyData[index]?.easyMiles || 0)
         : (weeklyData[index]?.easyMiles || 0),
@@ -125,6 +126,8 @@ export default function EightyTwentyChart({ endDate, unit }: EightyTwentyChartPr
       easyPercent: weeklyData[index]?.easyPercent || 0,
       hardPercent: weeklyData[index]?.hardPercent || 0,
     }));
+    // Reverse to show newest first
+    return data.reverse();
   }, [weeks, weeklyData, unit, weekStartDay]);
   
   const maxDistance = Math.max(...convertedData.map(d => d.totalMiles), 1);
@@ -180,10 +183,16 @@ export default function EightyTwentyChart({ endDate, unit }: EightyTwentyChartPr
         {convertedData.map((data, index) => {
           const isHovered = hoveredWeek === index;
           
+          // Check if current date is within this week
+          const now = new Date();
+          const weekEnd = new Date(data.weekStartDate);
+          weekEnd.setDate(weekEnd.getDate() + 7);
+          const isCurrentWeek = now >= data.weekStartDate && now < weekEnd;
+          
           return (
             <div key={index} className="flex items-center gap-2 sm:gap-3 relative">
-              <div className="w-12 sm:w-20 text-[10px] sm:text-sm font-medium text-gray-600 dark:text-gray-300 cursor-help" title={data.weekTooltip}>
-                {data.week}
+              <div className={`w-12 sm:w-20 text-[10px] sm:text-sm font-medium text-gray-600 dark:text-gray-300 cursor-help ${isCurrentWeek ? 'font-bold' : ''}`} title={data.weekTooltip}>
+                {isCurrentWeek ? 'Current Week' : data.week}
               </div>
               <div 
                 className="flex-1 relative h-6 sm:h-8 rounded-full overflow-hidden bg-gray-200 dark:bg-gray-700"
