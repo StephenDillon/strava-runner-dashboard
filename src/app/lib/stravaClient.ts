@@ -8,12 +8,10 @@ export class StravaClient {
   private refreshToken: string | null = null;
   private expiresAt: number | null = null;
 
-  constructor() {
-    if (typeof window === 'undefined') {
-      // Server-side: load from environment variables
-      this.accessToken = process.env.STRAVA_ACCESS_TOKEN || null;
-      this.refreshToken = process.env.STRAVA_REFRESH_TOKEN || null;
-    }
+  constructor(accessToken?: string, refreshToken?: string, expiresAt?: number) {
+    this.accessToken = accessToken || null;
+    this.refreshToken = refreshToken || null;
+    this.expiresAt = expiresAt || null;
   }
 
   /**
@@ -177,6 +175,27 @@ export class StravaClient {
     return await response.json();
   }
 
+  /**
+   * Get updated token data after refresh
+   */
+  getTokenData() {
+    return {
+      accessToken: this.accessToken,
+      refreshToken: this.refreshToken,
+      expiresAt: this.expiresAt
+    };
+  }
 }
 
-export const stravaClient = new StravaClient();
+// Helper function to create a client from request cookies
+export function getStravaClientFromCookies(cookies: any): StravaClient {
+  const accessToken = cookies.get('strava_access_token')?.value;
+  const refreshToken = cookies.get('strava_refresh_token')?.value;
+  const expiresAt = cookies.get('strava_expires_at')?.value;
+  
+  return new StravaClient(
+    accessToken,
+    refreshToken,
+    expiresAt ? parseInt(expiresAt) : undefined
+  );
+}

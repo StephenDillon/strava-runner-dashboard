@@ -32,17 +32,29 @@ export default function Home() {
 
   // Check for auth success in URL on mount
   useEffect(() => {
-    const params = new URLSearchParams(window.location.search);
-    const authSuccess = params.get('auth');
+    const checkAuth = async () => {
+      const params = new URLSearchParams(window.location.search);
+      const authSuccess = params.get('auth');
+      
+      if (authSuccess === 'success') {
+        // Clean up URL
+        window.history.replaceState({}, '', '/');
+      }
+      
+      // Always check auth status from server (cookies)
+      try {
+        const response = await fetch('/api/v1/auth/status');
+        const data = await response.json();
+        setIsAuthenticated(data.authenticated);
+      } catch (error) {
+        console.error('Error checking auth status:', error);
+        setIsAuthenticated(false);
+      } finally {
+        setIsCheckingAuth(false);
+      }
+    };
     
-    if (authSuccess === 'success') {
-      localStorage.setItem('strava_authenticated', 'true');
-      setIsAuthenticated(true);
-      // Clean up URL
-      window.history.replaceState({}, '', '/');
-    }
-    
-    setIsCheckingAuth(false);
+    checkAuth();
   }, [setIsAuthenticated]);
 
   // Update selected week when week start day changes

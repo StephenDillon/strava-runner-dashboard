@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { stravaClient } from '@/app/lib/stravaClient';
+import { StravaClient } from '@/app/lib/stravaClient';
 
 export async function GET(request: NextRequest) {
   const searchParams = request.nextUrl.searchParams;
@@ -15,21 +15,53 @@ export async function GET(request: NextRequest) {
   }
 
   try {
-    const tokenData = await stravaClient.exchangeToken(code);
+    const client = new StravaClient();
+    const tokenData = await client.exchangeToken(code);
 
-    // In a production app, you'd store these tokens securely (database, secure cookie, etc.)
-    // For now, we'll return them to be stored client-side or in session
     console.log('Token data received:', {
       athlete: tokenData.athlete,
       expiresAt: new Date(tokenData.expires_at * 1000),
     });
 
-    // Store tokens in environment or session
-    // TODO: Implement secure token storage
-
-    return NextResponse.redirect(
+    // Store tokens in HTTP-only cookies for security
+    const response = NextResponse.redirect(
       new URL('/?auth=success', request.url)
     );
+    
+    // Set secure HTTP-only cookies
+    response.cookies.set('strava_access_token', tokenData.access_token, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax',
+      maxAge: 60 * 60 * 6, // 6 hours
+      path: '/'
+    });
+    
+    response.cookies.set('strava_refresh_token', tokenData.refresh_token, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax',
+      maxAge: 60 * 60 * 24 * 365, // 1 year
+      path: '/'
+    });
+    
+    response.cookies.set('strava_expires_at', tokenData.expires_at.toString(), {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax',
+      maxAge: 60 * 60 * 24 * 365, // 1 year
+      path: '/'
+    });
+    
+    response.cookies.set('strava_athlete_id', tokenData.athlete.id.toString(), {
+      httpOnly: false, // Allow client to read this for display purposes
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax',
+      maxAge: 60 * 60 * 24 * 365, // 1 year
+      path: '/'
+    });
+
+    return response;
   } catch (error) {
     console.error('Error exchanging token:', error);
     return NextResponse.redirect(

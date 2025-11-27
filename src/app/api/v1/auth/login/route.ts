@@ -1,10 +1,10 @@
 import { NextResponse } from 'next/server';
-import { stravaClient } from '@/app/lib/stravaClient';
+import { StravaClient } from '@/app/lib/stravaClient';
 
 export async function GET() {
   try {
-    const searchParams = new URL(stravaClient.getAuthorizationUrl()).searchParams;
-    const authUrl = stravaClient.getAuthorizationUrl();
+    const client = new StravaClient();
+    const authUrl = client.getAuthorizationUrl();
     
     return NextResponse.json({ authUrl });
   } catch (error) {

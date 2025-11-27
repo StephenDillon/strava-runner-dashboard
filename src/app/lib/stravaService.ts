@@ -1,7 +1,13 @@
 import { StravaActivity, DetailedStravaActivity, HeartRateZones } from '../types/strava';
-import { stravaClient } from './stravaClient';
+import { StravaClient } from './stravaClient';
 
 export class StravaService {
+  private client: StravaClient;
+
+  constructor(client: StravaClient) {
+    this.client = client;
+  }
+
   /**
    * Get athlete activities
    */
@@ -19,7 +25,7 @@ export class StravaService {
     if (before) params.append('before', before.toString());
     if (after) params.append('after', after.toString());
 
-    return await stravaClient.fetchFromStrava<StravaActivity[]>(
+    return await this.client.fetchFromStrava<StravaActivity[]>(
       '/athlete/activities',
       params
     );
@@ -29,7 +35,7 @@ export class StravaService {
    * Get heart rate zones for a specific activity
    */
   async getActivityZones(activityId: number): Promise<HeartRateZones[]> {
-    return await stravaClient.fetchFromStrava<HeartRateZones[]>(
+    return await this.client.fetchFromStrava<HeartRateZones[]>(
       `/activities/${activityId}/zones`
     );
   }
@@ -90,5 +96,3 @@ export class StravaService {
     return activitiesWithZones;
   }
 }
-
-export const stravaService = new StravaService();

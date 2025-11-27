@@ -74,9 +74,8 @@ export function useStravaActivities(startDate: Date, endDate: Date) {
         );
 
         if (!response.ok) {
-          if (response.status === 401 || response.status === 403 || response.status === 500) {
+          if (response.status === 401 || response.status === 403) {
             // Authentication failed - clear auth state and prompt user to login again
-            localStorage.removeItem('strava_authenticated');
             setIsAuthenticated(false);
             throw new Error('Your Strava session has expired. Please connect with Strava again.');
           }
