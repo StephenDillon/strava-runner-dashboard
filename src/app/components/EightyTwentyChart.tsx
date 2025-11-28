@@ -66,6 +66,41 @@ export default function EightyTwentyChart({ endDate, unit }: EightyTwentyChartPr
 
   const { activities, loading, error } = useActivitiesWithZones(startDate, apiEndDate);
 
+  // Extract heart rate zones from the most recent activity with zone data
+  const stravaZones = useMemo(() => {
+    // Find the most recent activity with heart rate zone data
+    const activitiesWithZones = activities
+      .filter(a => !disabledActivities.has(a.id))
+      .filter(a => {
+        const hrZone = a.zones?.find((z: any) => z.type === "heartrate");
+        return hrZone && hrZone.distribution_buckets && hrZone.distribution_buckets.length > 0;
+      })
+      .sort((a, b) => new Date(b.start_date).getTime() - new Date(a.start_date).getTime());
+
+    if (activitiesWithZones.length > 0) {
+      const mostRecent = activitiesWithZones[0];
+      const hrZone = mostRecent.zones?.find((z: any) => z.type === "heartrate");
+      return hrZone?.distribution_buckets || [];
+    }
+    return [];
+  }, [activities, disabledActivities]);
+
+  // Find the actual max heart rate from all activities
+  const actualMaxHR = useMemo(() => {
+    const maxFromActivities = activities
+      .filter(a => !disabledActivities.has(a.id))
+      .filter(a => a.max_heartrate && a.max_heartrate > 0)
+      .reduce((max, activity) => Math.max(max, activity.max_heartrate || 0), 0);
+    
+    // If we have zones from Strava, use the max from the highest zone, otherwise use the max from activities
+    if (stravaZones.length > 0) {
+      const zoneMax = stravaZones[stravaZones.length - 1].max;
+      return Math.max(maxFromActivities, zoneMax);
+    }
+    
+    return maxFromActivities > 0 ? maxFromActivities : maxHeartRate;
+  }, [activities, disabledActivities, stravaZones, maxHeartRate]);
+
   const weeklyData = useMemo(() => {
     const weekStarts = generateWeekStarts(endDate, weeksToDisplay);
     
@@ -336,21 +371,34 @@ export default function EightyTwentyChart({ endDate, unit }: EightyTwentyChartPr
             </span>
             <div className="h-8 w-px bg-gray-300 dark:bg-gray-600 mx-2"></div>
             <div className="flex items-center gap-3 text-xs text-gray-600 dark:text-gray-400">
-              {zones.map((zone) => {
-                const minHR = Math.round((zone.minPercent / 100) * maxHeartRate);
-                const maxHR = Math.round((zone.maxPercent / 100) * maxHeartRate);
-                return (
-                  <div key={zone.zone} className="flex flex-col items-center">
-                    <div className="font-medium text-gray-700 dark:text-gray-300">Zone {zone.zone}</div>
-                    <div className="text-gray-500 dark:text-gray-500">{minHR}-{maxHR}</div>
+              {stravaZones.length > 0 ? (
+                stravaZones.map((zone, index) => (
+                  <div key={index} className="flex flex-col items-center">
+                    <div className="font-medium text-gray-700 dark:text-gray-300">Zone {index + 1}</div>
+                    <div className="text-gray-500 dark:text-gray-500">
+                      {index === stravaZones.length - 1 ? `> ${zone.min}` : `${zone.min}-${zone.max}`}
+                    </div>
                   </div>
-                );
-              })}
+                ))
+              ) : (
+                zones.map((zone) => {
+                  const minHR = Math.round((zone.minPercent / 100) * maxHeartRate);
+                  const maxHR = Math.round((zone.maxPercent / 100) * maxHeartRate);
+                  return (
+                    <div key={zone.zone} className="flex flex-col items-center">
+                      <div className="font-medium text-gray-700 dark:text-gray-300">Zone {zone.zone}</div>
+                      <div className="text-gray-500 dark:text-gray-500">
+                        {zone.zone === 5 ? `> ${minHR}` : `${minHR}-${maxHR}`}
+                      </div>
+                    </div>
+                  );
+                })
+              )}
             </div>
             <div className="h-8 w-px bg-gray-300 dark:bg-gray-600 mx-2"></div>
             <div className="flex flex-col items-center text-xs">
               <div className="font-medium text-gray-700 dark:text-gray-300">Max HR</div>
-              <div className="text-gray-500 dark:text-gray-500">{maxHeartRate} bpm</div>
+              <div className="text-gray-500 dark:text-gray-500">{actualMaxHR} bpm</div>
             </div>
           </div>
         </div>
