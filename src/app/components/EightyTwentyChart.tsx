@@ -6,6 +6,7 @@ import { useActivitiesWithZones } from '../hooks/useActivitiesWithZones';
 import { generateWeekStarts, metersToMiles } from '../utils/activityAggregation';
 import { useWeekStart } from '../context/WeekStartContext';
 import { useDisabledActivities } from '../context/DisabledActivitiesContext';
+import { useHeartRateZones } from '../context/HeartRateZonesContext';
 
 interface WeekData {
   week: string;
@@ -46,6 +47,7 @@ function formatTimeReadable(seconds: number): string {
 export default function EightyTwentyChart({ endDate, unit }: EightyTwentyChartProps) {
   const { weekStartDay, weeksToDisplay } = useWeekStart();
   const { disabledActivities } = useDisabledActivities();
+  const { maxHeartRate, zones } = useHeartRateZones();
   const weeks = getWeeksBack(weeksToDisplay, endDate);
   const [hoveredWeek, setHoveredWeek] = useState<number | null>(null);
   
@@ -332,10 +334,25 @@ export default function EightyTwentyChart({ endDate, unit }: EightyTwentyChartPr
                 {formatTimeReadable(totalHardTime)}
               </span>
             </span>
+            <div className="h-8 w-px bg-gray-300 dark:bg-gray-600 mx-2"></div>
+            <div className="flex items-center gap-3 text-xs text-gray-600 dark:text-gray-400">
+              {zones.map((zone) => {
+                const minHR = Math.round((zone.minPercent / 100) * maxHeartRate);
+                const maxHR = Math.round((zone.maxPercent / 100) * maxHeartRate);
+                return (
+                  <div key={zone.zone} className="flex flex-col items-center">
+                    <div className="font-medium text-gray-700 dark:text-gray-300">Zone {zone.zone}</div>
+                    <div className="text-gray-500 dark:text-gray-500">{minHR}-{maxHR}</div>
+                  </div>
+                );
+              })}
+            </div>
+            <div className="h-8 w-px bg-gray-300 dark:bg-gray-600 mx-2"></div>
+            <div className="flex flex-col items-center text-xs">
+              <div className="font-medium text-gray-700 dark:text-gray-300">Max HR</div>
+              <div className="text-gray-500 dark:text-gray-500">{maxHeartRate} bpm</div>
+            </div>
           </div>
-          <span>
-            Target: <strong className="text-gray-800 dark:text-white">80% Easy / 20% Hard</strong>
-          </span>
         </div>
       </div>
     </div>
