@@ -2,6 +2,8 @@ import { useState, useEffect } from 'react';
 import { StravaActivity } from '../types/strava';
 import { useStravaAuth } from '../context/StravaAuthContext';
 import { useActivityType } from '../context/ActivityTypeContext';
+import { getClientSideStravaClient } from '../lib/stravaClient';
+import { StravaService } from '../lib/stravaService';
 
 interface CachedActivities {
   version: string;
@@ -61,29 +63,25 @@ export function useStravaActivities(startDate: Date, endDate: Date) {
           endDateStr
         );
 
-        console.log('⟳ Fetching fresh activities from API', {
+        console.log('⟳ Fetching fresh activities from Strava API', {
           reason: cached ? 'cache miss or expired' : 'no cache',
           requestedRange: `${startDateStr} to ${endDateStr}`,
           fetchingRange: `${fetchStartDate} to ${fetchEndDate}`,
           activityType
         });
 
-        // Fetch from API
-        const response = await fetch(
-          `/api/v1/strava/activities?startDate=${fetchStartDate}&endDate=${fetchEndDate}`
-        );
-
-        if (!response.ok) {
-          if (response.status === 401 || response.status === 403) {
-            // Authentication failed - clear auth state and prompt user to login again
-            setIsAuthenticated(false);
-            throw new Error('Your Strava session has expired. Please connect with Strava again.');
-          }
-          throw new Error('Failed to fetch activities from Strava');
+        // Get Strava client and call API directly
+        const client = await getClientSideStravaClient();
+        if (!client) {
+          setIsAuthenticated(false);
+          throw new Error('Your Strava session has expired. Please connect with Strava again.');
         }
 
-        const data = await response.json();
-        const newActivities: StravaActivity[] = data.activities || [];
+        const stravaService = new StravaService(client);
+        const newActivities = await stravaService.getActivitiesInDateRange(
+          new Date(fetchStartDate),
+          new Date(fetchEndDate)
+        );
 
         // Merge with cached activities if needed
         let allActivities = newActivities;

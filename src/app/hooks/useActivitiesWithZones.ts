@@ -1,5 +1,8 @@
 import { useState, useEffect } from 'react';
 import { DetailedStravaActivity } from '../types/strava';
+import { getClientSideStravaClient } from '../lib/stravaClient';
+import { StravaService } from '../lib/stravaService';
+import { useStravaAuth } from '../context/StravaAuthContext';
 
 interface CachedActivitiesWithZones {
   activities: DetailedStravaActivity[];
@@ -15,6 +18,7 @@ export function useActivitiesWithZones(startDate: Date, endDate: Date) {
   const [activities, setActivities] = useState<DetailedStravaActivity[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const { setIsAuthenticated } = useStravaAuth();
 
   useEffect(() => {
     const fetchActivities = async () => {
@@ -34,20 +38,20 @@ export function useActivitiesWithZones(startDate: Date, endDate: Date) {
           return;
         }
 
-        console.log('⟳ Fetching activities with zones from API');
-        const params = new URLSearchParams({
-          startDate: startDateStr,
-          endDate: endDateStr,
-        });
-
-        const response = await fetch(`/api/v1/strava/activities/zones?${params.toString()}`);
-
-        if (!response.ok) {
-          throw new Error('Failed to fetch activities with heart rate zones');
+        console.log('⟳ Fetching activities with zones from Strava API');
+        
+        // Get Strava client and call API directly
+        const client = await getClientSideStravaClient();
+        if (!client) {
+          setIsAuthenticated(false);
+          throw new Error('Your Strava session has expired. Please connect with Strava again.');
         }
 
-        const data = await response.json();
-        const fetchedActivities = data.activities || [];
+        const stravaService = new StravaService(client);
+        const fetchedActivities = await stravaService.getActivitiesWithZones(
+          startDate,
+          endDate
+        );
 
         // Update cache
         const cacheData: CachedActivitiesWithZones = {

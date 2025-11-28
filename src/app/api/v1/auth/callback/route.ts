@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { StravaClient } from '@/app/lib/stravaClient';
+import { StravaTokenResponse } from '../../../../types/strava';
+
+const STRAVA_AUTH_BASE = 'https://www.strava.com/oauth';
 
 export async function GET(request: NextRequest) {
   const searchParams = request.nextUrl.searchParams;
@@ -15,8 +17,24 @@ export async function GET(request: NextRequest) {
   }
 
   try {
-    const client = new StravaClient();
-    const tokenData = await client.exchangeToken(code);
+    const tokenResponse = await fetch(`${STRAVA_AUTH_BASE}/token`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        client_id: process.env.NEXT_PUBLIC_STRAVA_CLIENT_ID,
+        client_secret: process.env.STRAVA_CLIENT_SECRET,
+        code,
+        grant_type: 'authorization_code',
+      }),
+    });
+
+    if (!tokenResponse.ok) {
+      throw new Error('Failed to exchange token');
+    }
+
+    const tokenData: StravaTokenResponse = await tokenResponse.json();
 
     console.log('Token data received:', {
       athlete: tokenData.athlete,

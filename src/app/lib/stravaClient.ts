@@ -1,78 +1,21 @@
-import { StravaTokenResponse } from '../types/strava';
-
 const STRAVA_API_BASE = 'https://www.strava.com/api/v3';
-const STRAVA_AUTH_BASE = 'https://www.strava.com/oauth';
 
 export class StravaClient {
   private accessToken: string | null = null;
-  private refreshToken: string | null = null;
   private expiresAt: number | null = null;
 
-  constructor(accessToken?: string, refreshToken?: string, expiresAt?: number) {
+  constructor(accessToken?: string, expiresAt?: number) {
     this.accessToken = accessToken || null;
-    this.refreshToken = refreshToken || null;
     this.expiresAt = expiresAt || null;
   }
 
   /**
-   * Get authorization URL for OAuth flow
-   */
-  getAuthorizationUrl(): string {
-    const clientId = process.env.NEXT_PUBLIC_STRAVA_CLIENT_ID;
-    const redirectUri = process.env.NEXT_PUBLIC_STRAVA_REDIRECT_URI;
-    const scope = 'read,activity:read_all,profile:read_all';
-
-    return `${STRAVA_AUTH_BASE}/authorize?client_id=${clientId}&response_type=code&redirect_uri=${redirectUri}&approval_prompt=force&scope=${scope}`;
-  }
-
-  /**
-   * Exchange authorization code for access token
-   */
-  async exchangeToken(code: string): Promise<StravaTokenResponse> {
-    const response = await fetch(`${STRAVA_AUTH_BASE}/token`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        client_id: process.env.NEXT_PUBLIC_STRAVA_CLIENT_ID,
-        client_secret: process.env.STRAVA_CLIENT_SECRET,
-        code,
-        grant_type: 'authorization_code',
-      }),
-    });
-
-    if (!response.ok) {
-      throw new Error('Failed to exchange token');
-    }
-
-    const data: StravaTokenResponse = await response.json();
-    this.accessToken = data.access_token;
-    this.refreshToken = data.refresh_token;
-    this.expiresAt = data.expires_at;
-
-    return data;
-  }
-
-  /**
-   * Refresh the access token
+   * Refresh the access token using the backend API
    */
   async refreshAccessToken(): Promise<string> {
-    if (!this.refreshToken) {
-      throw new Error('No refresh token available');
-    }
-
-    const response = await fetch(`${STRAVA_AUTH_BASE}/token`, {
+    const response = await fetch('/api/v1/auth/refresh', {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        client_id: process.env.NEXT_PUBLIC_STRAVA_CLIENT_ID,
-        client_secret: process.env.STRAVA_CLIENT_SECRET,
-        refresh_token: this.refreshToken,
-        grant_type: 'refresh_token',
-      }),
+      credentials: 'include', // Include cookies
     });
 
     if (!response.ok) {
@@ -81,7 +24,6 @@ export class StravaClient {
 
     const data = await response.json();
     this.accessToken = data.access_token;
-    this.refreshToken = data.refresh_token;
     this.expiresAt = data.expires_at;
 
     return this.accessToken!;
@@ -90,7 +32,7 @@ export class StravaClient {
   /**
    * Ensure we have a valid access token
    */
-  private async ensureValidToken(): Promise<string> {
+  async ensureValidToken(): Promise<string> {
     if (!this.accessToken) {
       throw new Error('No access token available. Please authenticate first.');
     }
@@ -181,21 +123,46 @@ export class StravaClient {
   getTokenData() {
     return {
       accessToken: this.accessToken,
-      refreshToken: this.refreshToken,
       expiresAt: this.expiresAt
     };
   }
 }
 
-// Helper function to create a client from request cookies
+// Server-side helper function to create a client from request cookies
 export function getStravaClientFromCookies(cookies: any): StravaClient {
   const accessToken = cookies.get('strava_access_token')?.value;
-  const refreshToken = cookies.get('strava_refresh_token')?.value;
   const expiresAt = cookies.get('strava_expires_at')?.value;
   
   return new StravaClient(
     accessToken,
-    refreshToken,
     expiresAt ? parseInt(expiresAt) : undefined
   );
+}
+
+// Client-side helper function to create a client from status API
+export async function getClientSideStravaClient(): Promise<StravaClient | null> {
+  try {
+    const response = await fetch('/api/v1/auth/status');
+    const data = await response.json();
+    
+    if (!data.authenticated) {
+      return null;
+    }
+    
+    // Get token info from the refresh endpoint to initialize the client
+    const refreshResponse = await fetch('/api/v1/auth/refresh', {
+      method: 'POST',
+      credentials: 'include',
+    });
+    
+    if (!refreshResponse.ok) {
+      return null;
+    }
+    
+    const tokenData = await refreshResponse.json();
+    return new StravaClient(tokenData.access_token, tokenData.expires_at);
+  } catch (error) {
+    console.error('Failed to initialize Strava client:', error);
+    return null;
+  }
 }
