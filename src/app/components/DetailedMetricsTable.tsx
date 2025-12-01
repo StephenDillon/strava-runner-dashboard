@@ -9,7 +9,7 @@ import { useDisabledActivities } from '../context/DisabledActivitiesContext';
 import { useActivityType } from '../context/ActivityTypeContext';
 import { StravaActivity } from '../types/strava';
 
-type SortField = 'date' | 'name' | 'distance' | 'time' | 'pace' | 'ae' | 'avgHR' | 'maxHR' | 'cadence';
+type SortField = 'date' | 'name' | 'distance' | 'time' | 'pace' | 'effort' | 'ae' | 'avgHR' | 'maxHR' | 'cadence';
 type SortDirection = 'asc' | 'desc';
 
 interface DetailedMetricsTableProps {
@@ -32,7 +32,7 @@ function formatTime(seconds: number): string {
   const hours = Math.floor(seconds / 3600);
   const mins = Math.floor((seconds % 3600) / 60);
   const secs = Math.round(seconds % 60);
-  
+
   if (hours > 0) {
     return `${hours}:${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
   }
@@ -42,11 +42,11 @@ function formatTime(seconds: number): string {
 
 function formatPace(metersPerSecond: number, unit: 'miles' | 'kilometers'): string {
   if (metersPerSecond === 0 || !isFinite(metersPerSecond)) return 'N/A';
-  
-  const minutesPerUnit = unit === 'kilometers' 
+
+  const minutesPerUnit = unit === 'kilometers'
     ? 16.6667 / metersPerSecond  // minutes per km
     : 26.8224 / metersPerSecond; // minutes per mile
-    
+
   const mins = Math.floor(minutesPerUnit);
   const secs = Math.round((minutesPerUnit - mins) * 60);
   return `${mins}:${secs.toString().padStart(2, '0')}`;
@@ -56,18 +56,18 @@ function calculateAerobicEfficiency(activity: StravaActivity, unit: 'miles' | 'k
   // Aerobic Efficiency (AE) = Normalized Graded Pace (NGP) / Average Heart Rate
   // For simplicity, we'll use pace instead of NGP since we don't have elevation-adjusted data
   // Higher values indicate better aerobic efficiency
-  
+
   if (!activity.average_heartrate || activity.average_heartrate === 0) return 0;
   if (!activity.average_speed || activity.average_speed === 0) return 0;
-  
+
   const paceMinutes = unit === 'kilometers'
     ? 16.6667 / activity.average_speed  // minutes per km
     : 26.8224 / activity.average_speed; // minutes per mile
-  
+
   // AE = (60 / pace) / HR * 100
   // This gives us speed per heartbeat, normalized to a percentage
   const efficiency = (60 / paceMinutes) / activity.average_heartrate * 100;
-  
+
   return efficiency;
 }
 
@@ -85,12 +85,12 @@ export default function DetailedMetricsTable({ endDate, unit }: DetailedMetricsT
   const { isActivityDisabled, toggleActivity } = useDisabledActivities();
   const { activityType } = useActivityType();
   const weeks = getWeeksBack(weeksToDisplay, endDate);
-  
+
   const [sortField, setSortField] = useState<SortField>('date');
   const [sortDirection, setSortDirection] = useState<SortDirection>('desc');
   const [nameFilter, setNameFilter] = useState('');
   const [showDisabled, setShowDisabled] = useState(true);
-  
+
   const handleSort = (field: SortField) => {
     if (sortField === field) {
       setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
@@ -99,14 +99,14 @@ export default function DetailedMetricsTable({ endDate, unit }: DetailedMetricsT
       setSortDirection('desc');
     }
   };
-  
+
   const SortIcon = ({ field }: { field: SortField }) => {
     if (sortField !== field) {
       return <span className="ml-1 text-gray-400">↕</span>;
     }
     return <span className="ml-1">{sortDirection === 'asc' ? '↑' : '↓'}</span>;
   };
-  
+
   const startDate = useMemo(() => {
     const start = new Date(weeks[0]);
     start.setHours(0, 0, 0, 0);
@@ -124,22 +124,22 @@ export default function DetailedMetricsTable({ endDate, unit }: DetailedMetricsT
 
   const sortedActivities = useMemo(() => {
     let filtered = [...activities];
-    
+
     // Apply name filter
     if (nameFilter.trim()) {
       const filterLower = nameFilter.toLowerCase();
       filtered = filtered.filter(a => a.name.toLowerCase().includes(filterLower));
     }
-    
+
     // Apply disabled filter
     if (!showDisabled) {
       filtered = filtered.filter(a => !isActivityDisabled(a.id));
     }
-    
+
     // Apply sorting
     filtered.sort((a, b) => {
       let comparison = 0;
-      
+
       switch (sortField) {
         case 'date':
           comparison = new Date(a.start_date).getTime() - new Date(b.start_date).getTime();
@@ -156,6 +156,9 @@ export default function DetailedMetricsTable({ endDate, unit }: DetailedMetricsT
         case 'pace':
           comparison = a.average_speed - b.average_speed;
           break;
+        case 'effort':
+          comparison = (a.suffer_score || 0) - (b.suffer_score || 0);
+          break;
         case 'ae':
           const aeA = calculateAerobicEfficiency(a, unit);
           const aeB = calculateAerobicEfficiency(b, unit);
@@ -171,10 +174,10 @@ export default function DetailedMetricsTable({ endDate, unit }: DetailedMetricsT
           comparison = (a.average_cadence || 0) - (b.average_cadence || 0);
           break;
       }
-      
+
       return sortDirection === 'asc' ? comparison : -comparison;
     });
-    
+
     return filtered;
   }, [activities, sortField, sortDirection, nameFilter, showDisabled, isActivityDisabled, unit]);
 
@@ -237,56 +240,63 @@ export default function DetailedMetricsTable({ endDate, unit }: DetailedMetricsT
                 <th className="sticky left-0 z-10 bg-gray-50 dark:bg-gray-900 px-3 sm:px-6 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                   Disabled
                 </th>
-                <th 
+                <th
                   className="sticky left-12 z-10 bg-gray-50 dark:bg-gray-900 px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider cursor-pointer hover:text-gray-700 dark:hover:text-gray-300"
                   onClick={() => handleSort('name')}
                 >
                   Name<SortIcon field="name" />
                 </th>
-                <th 
+                <th
                   className="px-3 sm:px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider whitespace-nowrap cursor-pointer hover:text-gray-700 dark:hover:text-gray-300"
                   onClick={() => handleSort('date')}
                 >
                   Date<SortIcon field="date" />
                 </th>
-                <th 
+                <th
                   className="px-3 sm:px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider whitespace-nowrap cursor-pointer hover:text-gray-700 dark:hover:text-gray-300"
                   onClick={() => handleSort('distance')}
                 >
                   Distance<SortIcon field="distance" />
                 </th>
-                <th 
+                <th
                   className="px-3 sm:px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider whitespace-nowrap cursor-pointer hover:text-gray-700 dark:hover:text-gray-300"
                   onClick={() => handleSort('time')}
                 >
                   Time<SortIcon field="time" />
                 </th>
-                <th 
+                <th
                   className="px-3 sm:px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider whitespace-nowrap cursor-pointer hover:text-gray-700 dark:hover:text-gray-300"
                   onClick={() => handleSort('pace')}
                 >
                   Pace<SortIcon field="pace" />
                 </th>
-                <th 
+                <th
+                  className="px-3 sm:px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider whitespace-nowrap cursor-pointer hover:text-gray-700 dark:hover:text-gray-300"
+                  onClick={() => handleSort('effort')}
+                  title="Relative Effort: Strava's calculated effort score based on heart rate data"
+                >
+                  Effort<SortIcon field="effort" />
+                </th>
+                <th
                   className="px-3 sm:px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider whitespace-nowrap cursor-pointer hover:text-gray-700 dark:hover:text-gray-300"
                   onClick={() => handleSort('ae')}
                   title="Aerobic Efficiency: Speed per heartbeat(AVG Speed / AVG Heart Rate) × 100. Higher values indicate better aerobic fitness and efficiency."
                 >
                   AE<SortIcon field="ae" />
                 </th>
-                <th 
+                <th
                   className="px-3 sm:px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider whitespace-nowrap cursor-pointer hover:text-gray-700 dark:hover:text-gray-300"
                   onClick={() => handleSort('avgHR')}
                 >
                   Avg HR<SortIcon field="avgHR" />
                 </th>
-                <th 
+                <th
                   className="px-3 sm:px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider whitespace-nowrap cursor-pointer hover:text-gray-700 dark:hover:text-gray-300"
                   onClick={() => handleSort('maxHR')}
                 >
                   Max HR<SortIcon field="maxHR" />
                 </th>
-                <th 
+                <th
                   className="px-3 sm:px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider whitespace-nowrap cursor-pointer hover:text-gray-700 dark:hover:text-gray-300"
                   onClick={() => handleSort('cadence')}
                 >
@@ -300,7 +310,7 @@ export default function DetailedMetricsTable({ endDate, unit }: DetailedMetricsT
                 const convertedDistance = unit === 'kilometers' ? milesToKm(distance) : distance;
                 const aerobicEfficiency = calculateAerobicEfficiency(activity, unit);
                 const isDisabled = isActivityDisabled(activity.id);
-                
+
                 return (
                   <tr key={activity.id}>
                     <td className="sticky left-0 z-10 bg-white dark:bg-gray-800 px-3 sm:px-6 py-4 text-center">
@@ -332,6 +342,9 @@ export default function DetailedMetricsTable({ endDate, unit }: DetailedMetricsT
                     </td>
                     <td className={`px-3 sm:px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-300 text-right ${isDisabled ? 'line-through' : ''}`} style={{ fontFamily: monoFont }}>
                       {formatPace(activity.average_speed, unit)} {paceLabel}
+                    </td>
+                    <td className={`px-3 sm:px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-300 text-right ${isDisabled ? 'line-through' : ''}`} style={{ fontFamily: monoFont }}>
+                      {activity.suffer_score || '-'}
                     </td>
                     <td className={`px-3 sm:px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-300 text-right ${isDisabled ? 'line-through' : ''}`} style={{ fontFamily: monoFont }}>
                       {aerobicEfficiency > 0 ? aerobicEfficiency.toFixed(2) : '-'}

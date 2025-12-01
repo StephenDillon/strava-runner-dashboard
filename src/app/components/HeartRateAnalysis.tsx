@@ -7,7 +7,7 @@ import { metersToMiles } from '../utils/activityAggregation';
 import { useWeekStart } from '../context/WeekStartContext';
 import { useDisabledActivities } from '../context/DisabledActivitiesContext';
 
-type SortField = 'date' | 'name' | 'distance' | 'time' | 'pace' | 'effort' | 'zone1' | 'zone2' | 'zone3' | 'zone4' | 'zone5';
+type SortField = 'date' | 'name' | 'distance' | 'time' | 'pace' | 'avgHR' | 'maxHR' | 'zone1' | 'zone2' | 'zone3' | 'zone4' | 'zone5';
 type SortDirection = 'asc' | 'desc';
 
 interface HeartRateAnalysisProps {
@@ -31,7 +31,7 @@ function formatTime(seconds: number): string {
   const hours = Math.floor(seconds / 3600);
   const mins = Math.floor((seconds % 3600) / 60);
   const secs = Math.round(seconds % 60);
-  
+
   if (hours > 0) {
     return `${hours}:${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
   }
@@ -40,11 +40,11 @@ function formatTime(seconds: number): string {
 
 function formatPace(metersPerSecond: number, unit: 'miles' | 'kilometers'): string {
   if (metersPerSecond === 0 || !isFinite(metersPerSecond)) return 'N/A';
-  
-  const minutesPerUnit = unit === 'kilometers' 
+
+  const minutesPerUnit = unit === 'kilometers'
     ? 16.6667 / metersPerSecond  // minutes per km
     : 26.8224 / metersPerSecond; // minutes per mile
-    
+
   const mins = Math.floor(minutesPerUnit);
   const secs = Math.round((minutesPerUnit - mins) * 60);
   return `${mins}:${secs.toString().padStart(2, '0')}`;
@@ -61,12 +61,12 @@ function formatTimeReadable(seconds: number): string {
   const hours = Math.floor(seconds / 3600);
   const mins = Math.floor((seconds % 3600) / 60);
   const secs = Math.round(seconds % 60);
-  
+
   const parts = [];
   if (hours > 0) parts.push(`${hours} hour${hours !== 1 ? 's' : ''}`);
   if (mins > 0) parts.push(`${mins} min`);
   if (secs > 0 || parts.length === 0) parts.push(`${secs} sec`);
-  
+
   return parts.join(', ');
 }
 
@@ -74,12 +74,12 @@ export default function HeartRateAnalysis({ endDate, unit }: HeartRateAnalysisPr
   const { weeksToDisplay } = useWeekStart();
   const { isActivityDisabled } = useDisabledActivities();
   const weeks = getWeeksBack(weeksToDisplay, endDate);
-  
+
   const [sortField, setSortField] = useState<SortField>('date');
   const [sortDirection, setSortDirection] = useState<SortDirection>('desc');
   const [nameFilter, setNameFilter] = useState('');
   const [showDisabled, setShowDisabled] = useState(true);
-  
+
   const startDate = useMemo(() => {
     const start = new Date(weeks[0]);
     start.setHours(0, 0, 0, 0);
@@ -103,7 +103,7 @@ export default function HeartRateAnalysis({ endDate, unit }: HeartRateAnalysisPr
       setSortDirection('desc');
     }
   };
-  
+
   const SortIcon = ({ field }: { field: SortField }) => {
     if (sortField !== field) {
       return <span className="ml-1 text-gray-400">↕</span>;
@@ -113,24 +113,24 @@ export default function HeartRateAnalysis({ endDate, unit }: HeartRateAnalysisPr
 
   const sortedActivities = useMemo(() => {
     let filtered = [...activities];
-    
+
     // Apply name filter
     if (nameFilter.trim()) {
       const filterLower = nameFilter.toLowerCase();
       filtered = filtered.filter(a => a.name.toLowerCase().includes(filterLower));
     }
-    
+
     // Apply disabled filter
     if (!showDisabled) {
       filtered = filtered.filter(a => !isActivityDisabled(a.id));
     }
-    
+
     // Calculate zone times for sorting
     const activitiesWithZones = filtered.map(activity => {
       // Find the heartrate zone object and get distribution_buckets
       const hrZone = activity.zones?.find((z: any) => z.type === 'heartrate');
       const buckets = hrZone?.distribution_buckets || [];
-      
+
       return {
         ...activity,
         zone1Time: buckets[0]?.time || 0,
@@ -140,11 +140,11 @@ export default function HeartRateAnalysis({ endDate, unit }: HeartRateAnalysisPr
         zone5Time: buckets[4]?.time || 0,
       };
     });
-    
+
     // Apply sorting
     activitiesWithZones.sort((a, b) => {
       let comparison = 0;
-      
+
       switch (sortField) {
         case 'date':
           comparison = new Date(a.start_date).getTime() - new Date(b.start_date).getTime();
@@ -161,8 +161,11 @@ export default function HeartRateAnalysis({ endDate, unit }: HeartRateAnalysisPr
         case 'pace':
           comparison = a.average_speed - b.average_speed;
           break;
-        case 'effort':
-          comparison = (a.suffer_score || 0) - (b.suffer_score || 0);
+        case 'avgHR':
+          comparison = (a.average_heartrate || 0) - (b.average_heartrate || 0);
+          break;
+        case 'maxHR':
+          comparison = (a.max_heartrate || 0) - (b.max_heartrate || 0);
           break;
         case 'zone1':
           comparison = a.zone1Time - b.zone1Time;
@@ -180,10 +183,10 @@ export default function HeartRateAnalysis({ endDate, unit }: HeartRateAnalysisPr
           comparison = a.zone5Time - b.zone5Time;
           break;
       }
-      
+
       return sortDirection === 'asc' ? comparison : -comparison;
     });
-    
+
     return activitiesWithZones;
   }, [activities, sortField, sortDirection, nameFilter, showDisabled, isActivityDisabled]);
 
@@ -237,7 +240,7 @@ export default function HeartRateAnalysis({ endDate, unit }: HeartRateAnalysisPr
           </label>
         </div>
       </div>
-      
+
       {sortedActivities.length === 0 ? (
         <div className="flex items-center justify-center py-12">
           <div className="text-gray-500 dark:text-gray-400">No activities with heart rate data found</div>
@@ -248,68 +251,73 @@ export default function HeartRateAnalysis({ endDate, unit }: HeartRateAnalysisPr
             <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
               <thead className="bg-gray-50 dark:bg-gray-900">
                 <tr>
-                  <th 
+                  <th
                     className="px-3 sm:px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider cursor-pointer hover:text-gray-700 dark:hover:text-gray-300"
                     onClick={() => handleSort('name')}
                   >
                     Activity<SortIcon field="name" />
                   </th>
-                  <th 
+                  <th
                     className="px-3 sm:px-4 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider whitespace-nowrap cursor-pointer hover:text-gray-700 dark:hover:text-gray-300"
                     onClick={() => handleSort('date')}
                   >
                     Date<SortIcon field="date" />
                   </th>
-                  <th 
+                  <th
                     className="px-3 sm:px-4 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider whitespace-nowrap cursor-pointer hover:text-gray-700 dark:hover:text-gray-300"
                     onClick={() => handleSort('distance')}
                   >
                     Distance<SortIcon field="distance" />
                   </th>
-                  <th 
+                  <th
                     className="px-3 sm:px-4 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider whitespace-nowrap cursor-pointer hover:text-gray-700 dark:hover:text-gray-300"
                     onClick={() => handleSort('time')}
                   >
                     Time<SortIcon field="time" />
                   </th>
-                  <th 
+                  <th
                     className="px-3 sm:px-4 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider whitespace-nowrap cursor-pointer hover:text-gray-700 dark:hover:text-gray-300"
                     onClick={() => handleSort('pace')}
                   >
                     Pace<SortIcon field="pace" />
                   </th>
-                  <th 
+                  <th
                     className="px-3 sm:px-4 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider whitespace-nowrap cursor-pointer hover:text-gray-700 dark:hover:text-gray-300"
-                    onClick={() => handleSort('effort')}
-                    title="Relative Effort: Strava's calculated effort score based on heart rate data"
+                    onClick={() => handleSort('avgHR')}
                   >
-                    Effort<SortIcon field="effort" />
+                    Avg HR<SortIcon field="avgHR" />
                   </th>
-                  <th 
+                  <th
+                    className="px-3 sm:px-4 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider whitespace-nowrap cursor-pointer hover:text-gray-700 dark:hover:text-gray-300"
+                    onClick={() => handleSort('maxHR')}
+                  >
+                    Max HR<SortIcon field="maxHR" />
+                  </th>
+                  <th
                     className="px-3 sm:px-4 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider whitespace-nowrap cursor-pointer hover:text-gray-700 dark:hover:text-gray-300"
                     onClick={() => handleSort('zone1')}
                   >
                     Z1<SortIcon field="zone1" />
                   </th>
-                  <th 
+                  <th
                     className="px-3 sm:px-4 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider whitespace-nowrap cursor-pointer hover:text-gray-700 dark:hover:text-gray-300"
                     onClick={() => handleSort('zone2')}
                   >
                     Z2<SortIcon field="zone2" />
                   </th>
-                  <th 
+                  <th
                     className="px-3 sm:px-4 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider whitespace-nowrap cursor-pointer hover:text-gray-700 dark:hover:text-gray-300"
                     onClick={() => handleSort('zone3')}
                   >
                     Z3<SortIcon field="zone3" />
                   </th>
-                  <th 
+                  <th
                     className="px-3 sm:px-4 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider whitespace-nowrap cursor-pointer hover:text-gray-700 dark:hover:text-gray-300"
                     onClick={() => handleSort('zone4')}
                   >
                     Z4<SortIcon field="zone4" />
                   </th>
-                  <th 
+                  <th
                     className="px-3 sm:px-4 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider whitespace-nowrap cursor-pointer hover:text-gray-700 dark:hover:text-gray-300"
                     onClick={() => handleSort('zone5')}
                   >
@@ -325,7 +333,7 @@ export default function HeartRateAnalysis({ endDate, unit }: HeartRateAnalysisPr
                   // Find the heartrate zone object and get distribution_buckets
                   const hrZone = activity.zones?.find((z: any) => z.type === 'heartrate');
                   const buckets = hrZone?.distribution_buckets || [];
-                  
+
                   return (
                     <tr key={activity.id} className={isDisabled ? 'opacity-50' : ''}>
                       <td className="px-3 sm:px-4 py-3 text-sm font-medium max-w-xs truncate">
@@ -351,7 +359,10 @@ export default function HeartRateAnalysis({ endDate, unit }: HeartRateAnalysisPr
                         {formatPace(activity.average_speed, unit)} {paceLabel}
                       </td>
                       <td className="px-3 sm:px-4 py-3 whitespace-nowrap text-sm text-gray-900 dark:text-gray-300 text-right" style={{ fontFamily: monoFont }}>
-                        {activity.suffer_score || '-'}
+                        {activity.average_heartrate ? Math.round(activity.average_heartrate) : '-'}
+                      </td>
+                      <td className="px-3 sm:px-4 py-3 whitespace-nowrap text-sm text-gray-900 dark:text-gray-300 text-right" style={{ fontFamily: monoFont }}>
+                        {activity.max_heartrate ? Math.round(activity.max_heartrate) : '-'}
                       </td>
                       <td className="px-3 sm:px-4 py-3 whitespace-nowrap text-sm text-gray-900 dark:text-gray-300 text-right" style={{ fontFamily: monoFont }} title={buckets[0] ? formatTimeReadable(buckets[0].time) : '0 sec'}>
                         {buckets[0] ? formatPercentage(buckets[0].time, activity.moving_time) : '0.00%'}
