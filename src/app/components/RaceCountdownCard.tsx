@@ -1,6 +1,7 @@
 "use client";
 
 import { Race } from '../types/race';
+import { parseRaceDate } from '../utils/dateUtils';
 
 interface RaceCountdownCardProps {
     race: Race;
@@ -9,18 +10,9 @@ interface RaceCountdownCardProps {
 export default function RaceCountdownCard({ race }: RaceCountdownCardProps) {
     const calculateTimeLeft = () => {
         const now = new Date();
-        // Reset time part of now to midnight for accurate day calculation
         now.setHours(0, 0, 0, 0);
 
-        const raceDate = new Date(race.date);
-        // Ensure race date is treated as local midnight or UTC midnight depending on input, 
-        // but usually input[type="date"] gives YYYY-MM-DD. 
-        // Parsing it directly usually treats it as UTC. 
-        // Let's adjust to ensure we are comparing dates correctly.
-        // Actually, simple difference in milliseconds is usually enough if we just want days.
-
-        // Create date objects in local time to avoid timezone issues with simple subtraction
-        const raceDateLocal = new Date(raceDate.getUTCFullYear(), raceDate.getUTCMonth(), raceDate.getUTCDate());
+        const raceDateLocal = parseRaceDate(race.date);
 
         const difference = raceDateLocal.getTime() - now.getTime();
 
@@ -44,7 +36,7 @@ export default function RaceCountdownCard({ race }: RaceCountdownCardProps) {
                     {race.name}
                 </h2>
                 <div className="text-sm text-gray-400 dark:text-gray-500">
-                    {new Date(race.date).toLocaleDateString(undefined, { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
+                    {parseRaceDate(race.date).toLocaleDateString(undefined, { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
                 </div>
             </div>
 

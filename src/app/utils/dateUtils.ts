@@ -14,14 +14,14 @@ export function getLastFullWeek(weekStartsOn: WeekStartDay = 'Monday'): Date {
   const today = new Date();
   const dayOfWeek = today.getDay(); // 0 = Sunday, 6 = Saturday
   const startDayNum = DAY_TO_NUMBER[weekStartsOn];
-  
+
   let daysToLastStart;
   if (dayOfWeek >= startDayNum) {
     daysToLastStart = dayOfWeek - startDayNum;
   } else {
     daysToLastStart = 7 - (startDayNum - dayOfWeek);
   }
-  
+
   const currentWeekStart = new Date(today);
   currentWeekStart.setDate(today.getDate() - daysToLastStart);
   currentWeekStart.setHours(0, 0, 0, 0);
@@ -54,15 +54,15 @@ export function formatWeekTooltip(date: Date, weekStartsOn: WeekStartDay = 'Mond
   const startDate = new Date(date);
   const endDate = new Date(date);
   endDate.setDate(startDate.getDate() + 6);
-  
+
   const startMonth = startDate.toLocaleString('en-US', { month: 'short' });
   const startDay = startDate.getDate();
   const endMonth = endDate.toLocaleString('en-US', { month: 'short' });
   const endDay = endDate.getDate();
   const year = endDate.getFullYear();
-  
+
   const dayName = DAY_ABBREVIATIONS[weekStartsOn];
-  
+
   if (startMonth === endMonth) {
     return `${dayName} ${startMonth} ${startDay}-${endDay}, ${year}`;
   } else {
@@ -76,4 +76,23 @@ export function getWeeksBack(count: number, endDate: Date): Date[] {
     weeks.push(getWeekStartDate(i, endDate));
   }
   return weeks;
+}
+
+// Parses a date string (YYYY-MM-DD or partial ISO) and returns a Date object 
+// set to midnight local time to avoid timezone shifts.
+export function parseRaceDate(dateString: string): Date {
+  if (!dateString) return new Date();
+
+  // Extract YYYY-MM-DD regardless of what follows (T, space, etc)
+  // This explicitly ignores any time or timezone info in the string
+  const datePart = String(dateString).split('T')[0].split(' ')[0];
+  const parts = datePart.split('-');
+
+  if (parts.length < 3) return new Date(dateString); // Fallback
+
+  const year = parseInt(parts[0], 10);
+  const month = parseInt(parts[1], 10) - 1; // 0-indexed
+  const day = parseInt(parts[2], 10);
+
+  return new Date(year, month, day);
 }

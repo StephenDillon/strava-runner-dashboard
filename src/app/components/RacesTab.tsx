@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { Race } from '../types/race';
+import { parseRaceDate } from '../utils/dateUtils';
 
 interface RacesTabProps {
     races: Race[];
@@ -94,7 +95,7 @@ export default function RacesTab({ races, onAddRace, onRemoveRace }: RacesTabPro
                                             {race.name}
                                         </td>
                                         <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500 dark:text-gray-400">
-                                            {new Date(race.date).toLocaleDateString()}
+                                            {parseRaceDate(race.date).toLocaleDateString()}
                                         </td>
                                         <td className="relative whitespace-nowrap py-4 pl-3 pr-4 text-right text-sm font-medium sm:pr-6">
                                             <button
