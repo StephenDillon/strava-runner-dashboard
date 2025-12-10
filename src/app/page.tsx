@@ -95,7 +95,7 @@ export default function Home() {
 
   return (
     <div className="font-sans bg-linear-to-br from-blue-50 to-indigo-100 dark:from-gray-900 dark:to-gray-800">
-      <div className="max-w-7xl mx-auto py-4 sm:py-8 md:py-12 px-3 sm:px-4">
+      <div className="max-w-7xl mx-auto py-2 sm:py-4 md:py-6 px-3 sm:px-4">
         <WeekSelector selectedWeek={selectedWeek} onWeekChange={setSelectedWeek} />
 
         {/* Tab Navigation */}

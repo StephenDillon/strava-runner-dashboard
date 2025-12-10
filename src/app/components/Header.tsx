@@ -11,18 +11,15 @@ interface HeaderProps {
 export default function Header({ onConfigToggle, showConfig }: HeaderProps) {
   return (
     <header className="bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-800 shadow-sm">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 py-4 sm:py-6">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 py-2 sm:py-4">
         <div className="flex flex-col sm:flex-row items-start sm:items-start justify-between gap-4">
           <div className="flex-1">
-            <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold text-gray-900 dark:text-white mb-2 sm:mb-4">
-              Weekly Running Dashboard 🏃
+            <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-gray-900 dark:text-white mb-1">
+              Weekly Running Dashboard
             </h1>
-            <p className="text-sm sm:text-base md:text-lg text-gray-600 dark:text-gray-300">
-              Track your running progress and performance metrics
-            </p>
             <p className="text-xs sm:text-sm text-gray-500 dark:text-gray-400 mt-2">
               For any feedback please email{' '}
-              <a 
+              <a
                 href="mailto:weekly-runner-dashboard@proton.me"
                 className="text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 hover:underline break-all"
               >
@@ -30,14 +27,13 @@ export default function Header({ onConfigToggle, showConfig }: HeaderProps) {
               </a>
             </p>
           </div>
-          
+
           <button
             onClick={onConfigToggle}
-            className={`p-2 sm:p-3 rounded-lg transition-colors shrink-0 ${
-              showConfig
-                ? 'bg-blue-600 text-white'
-                : 'bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700'
-            }`}
+            className={`p-2 sm:p-3 rounded-lg transition-colors shrink-0 ${showConfig
+              ? 'bg-blue-600 text-white'
+              : 'bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700'
+              }`}
             aria-label="Toggle configuration"
           >
             <svg
